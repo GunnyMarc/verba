@@ -18,7 +18,8 @@ def suppress_stdout():
 def make_progress_callback(job):
     """Factory that returns a callback for updating job progress."""
 
-    def callback(progress: int, message: str = ""):
-        job.update_progress(progress, message)
+    def callback(progress, message=""):
+        pct = int(progress * 100) if isinstance(progress, float) and progress <= 1.0 else int(progress)
+        job.update_progress(pct, message)
 
     return callback

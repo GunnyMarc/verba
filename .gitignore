@@ -1,5 +1,6 @@
 verba_build_prompt.md
 venv/
+web/webui/
 __pycache__/
 .DS_Store
 web/.verba.key
@@ -8,3 +9,4 @@ web/.verba.pid
 web/certs/
 web/uploads/
 web/output/
+web/log/

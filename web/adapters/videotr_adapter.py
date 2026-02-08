@@ -15,10 +15,10 @@ class VideotrAdapter:
             from videotr.src.pipeline import TranscriptionPipeline
 
             pipeline = TranscriptionPipeline(
-                model_size=settings.get("whisper_model", "base"),
+                model=settings.get("whisper_model", "base"),
                 language=settings.get("language", "auto"),
                 device=settings.get("device", "auto"),
-                markdown_style=settings.get("markdown_style", "timestamped"),
+                style=settings.get("markdown_style", "timestamped"),
                 include_metadata=settings.get("include_metadata", True),
             )
 
@@ -63,18 +63,25 @@ class VideotrAdapter:
         failed_count = 0
 
         for i, file_path in enumerate(file_paths, 1):
+            base_pct = int((i - 1) / total * 100)
+            span = int(100 / total)
             job.update_progress(
-                int((i - 1) / total * 100),
+                base_pct,
                 f"Processing {i}/{total}: {Path(file_path).name}",
             )
+
+            def batch_callback(progress, message="", _base=base_pct, _span=span, _i=i, _total=total):
+                pct = int(progress * 100) if isinstance(progress, float) and progress <= 1.0 else int(progress)
+                job.update_progress(_base + int(pct * _span / 100), f"[{_i}/{_total}] {message}")
+
             try:
                 from videotr.src.pipeline import TranscriptionPipeline
 
                 pipeline = TranscriptionPipeline(
-                    model_size=settings.get("whisper_model", "base"),
+                    model=settings.get("whisper_model", "base"),
                     language=settings.get("language", "auto"),
                     device=settings.get("device", "auto"),
-                    markdown_style=settings.get("markdown_style", "timestamped"),
+                    style=settings.get("markdown_style", "timestamped"),
                     include_metadata=settings.get("include_metadata", True),
                 )
 
@@ -82,7 +89,7 @@ class VideotrAdapter:
                 output_path = Path(output_dir) / f"{input_path.stem}_transcript.md"
 
                 with suppress_stdout():
-                    result = pipeline.process(str(input_path), str(output_path), None)
+                    result = pipeline.process(str(input_path), str(output_path), batch_callback)
 
                 if result.success:
                     success_count += 1
