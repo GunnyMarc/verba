@@ -58,7 +58,7 @@
                 {% set info = job.result.get("video_info") or job.result.get("audio_info") or {} %}
                 {% if info.get("duration") %}
                 <div class="meta-item">
-                    <span class="meta-label">Duration</span>
+                    <span class="meta-label">Duration (milliseconds)</span>
                     <span class="meta-value">{{ info.duration }}</span>
                 </div>
                 {% endif %}

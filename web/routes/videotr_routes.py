@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from html import escape
 from pathlib import Path
 
 from fastapi import APIRouter, Request, UploadFile, File, Form
@@ -97,10 +98,9 @@ async def videotr_upload(
             })
         job = job_manager.create_job("videotr", f"Batch ({len(file_paths)} files)", job_settings)
         executor.submit(VideotrAdapter.run_batch, job, file_paths, str(resolved_output), job_settings)
-        return templates.TemplateResponse("partials/progress.html", {
+        return templates.TemplateResponse("partials/videotr_progress.html", {
             "request": request,
             "job_id": job.id,
-            "tool": "videotr",
         })
 
     # Single file mode
@@ -136,10 +136,9 @@ async def videotr_upload(
     job = job_manager.create_job("videotr", file.filename, job_settings)
     executor.submit(VideotrAdapter.run, job, str(save_path), str(resolved_output), job_settings)
 
-    return templates.TemplateResponse("partials/progress.html", {
+    return templates.TemplateResponse("partials/videotr_progress.html", {
         "request": request,
         "job_id": job.id,
-        "tool": "videotr",
     })
 
 
@@ -149,6 +148,7 @@ async def videotr_stream(request: Request, job_id: str):
     templates = request.app.state.templates
 
     async def event_generator():
+        last_message = ""
         while True:
             if await request.is_disconnected():
                 break
@@ -164,7 +164,19 @@ async def videotr_stream(request: Request, job_id: str):
             )
             yield {"event": "progress", "data": progress_html}
 
+            # Send verbose log entry when message changes
+            if job.progress_message and job.progress_message != last_message:
+                last_message = job.progress_message
+                safe_msg = escape(job.progress_message)
+                log_html = f'<div class="log-line">[{job.progress}%] {safe_msg}</div>'
+                yield {"event": "log", "data": log_html}
+
             if job.status in (JobStatus.COMPLETED, JobStatus.FAILED):
+                if job.status == JobStatus.COMPLETED:
+                    yield {"event": "log", "data": '<div class="log-line log-line--done">Transcription complete.</div>'}
+                else:
+                    safe_err = escape(job.error or "Unknown error")
+                    yield {"event": "log", "data": f'<div class="log-line log-line--error">Error: {safe_err}</div>'}
                 yield {"event": "complete", "data": ""}
                 break
 
