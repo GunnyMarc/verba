@@ -8,7 +8,7 @@ from .base import make_progress_callback, suppress_stdout
 class VideotrAdapter:
 
     @staticmethod
-    def run(job, upload_path: str, output_dir: str, settings: dict) -> dict:
+    def run(job, upload_path: str, output_dir: str, settings: dict, original_name: str = "") -> dict:
         job.start()
         callback = make_progress_callback(job)
         try:
@@ -23,7 +23,8 @@ class VideotrAdapter:
             )
 
             input_path = Path(upload_path)
-            output_path = Path(output_dir) / f"{input_path.stem}_transcript.md"
+            stem = Path(original_name).stem if original_name else input_path.stem
+            output_path = Path(output_dir) / f"{stem}.md"
 
             with suppress_stdout():
                 result = pipeline.process(
@@ -86,7 +87,7 @@ class VideotrAdapter:
                 )
 
                 input_path = Path(file_path)
-                output_path = Path(output_dir) / f"{input_path.stem}_transcript.md"
+                output_path = Path(output_dir) / f"{input_path.stem}.md"
 
                 with suppress_stdout():
                     result = pipeline.process(str(input_path), str(output_path), batch_callback)

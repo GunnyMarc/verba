@@ -135,7 +135,7 @@ async def videotr_upload(
     save_path.write_bytes(content)
 
     job = job_manager.create_job("videotr", file.filename, job_settings)
-    executor.submit(VideotrAdapter.run, job, str(save_path), str(resolved_output), job_settings)
+    executor.submit(VideotrAdapter.run, job, str(save_path), str(resolved_output), job_settings, file.filename)
 
     return templates.TemplateResponse("partials/videotr_progress.html", {
         "request": request,

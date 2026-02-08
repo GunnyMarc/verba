@@ -133,7 +133,7 @@ async def audiotr_upload(
     save_path.write_bytes(content)
 
     job = job_manager.create_job("audiotr", file.filename, job_settings)
-    executor.submit(AudiotrAdapter.run, job, str(save_path), str(resolved_output), job_settings)
+    executor.submit(AudiotrAdapter.run, job, str(save_path), str(resolved_output), job_settings, file.filename)
 
     return templates.TemplateResponse("partials/audiotr_progress.html", {
         "request": request,
