@@ -1,0 +1,10 @@
+verba_build_prompt.md
+venv/
+__pycache__/
+.DS_Store
+web/.verba.key
+web/.verba_keys.dat
+web/.verba.pid
+web/certs/
+web/uploads/
+web/output/

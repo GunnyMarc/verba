@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Verba{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
+</head>
+<body>
+    <div class="app-shell">
+        <nav class="nav-bar">
+            <div class="nav-brand">
+                <span class="brand-icon">&#9670;</span>
+                <span class="brand-text">VERBA</span>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a>
+                <a href="/videotr" class="nav-link {% if active_page == 'videotr' %}active{% endif %}">Video</a>
+                <a href="/audiotr" class="nav-link {% if active_page == 'audiotr' %}active{% endif %}">Audio</a>
+                <a href="/transtr" class="nav-link {% if active_page == 'transtr' %}active{% endif %}">Summarize</a>
+                <a href="/settings" class="nav-link {% if active_page == 'settings' %}active{% endif %}">Settings</a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="footer">
+            <span class="footer-text">VERBA &mdash; Media Processing Suite</span>
+        </footer>
+    </div>
+</body>
+</html>

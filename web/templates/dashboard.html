@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Verba — Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Media Processing Suite</h1>
+    <p class="subtitle">Transcribe, convert, and summarize your media files</p>
+</div>
+
+<div class="tool-grid">
+    <a href="/videotr" class="tool-card tool-card--video">
+        <div class="tool-card__icon">&#9654;</div>
+        <h2 class="tool-card__title">Video Transcription</h2>
+        <p class="tool-card__desc">Extract and transcribe speech from video files</p>
+        <div class="tool-card__formats">.mov .mp4 .mkv .mpeg .avi .webm</div>
+    </a>
+
+    <a href="/audiotr" class="tool-card tool-card--audio">
+        <div class="tool-card__icon">&#9835;</div>
+        <h2 class="tool-card__title">Audio Transcription</h2>
+        <p class="tool-card__desc">Transcribe speech from audio recordings</p>
+        <div class="tool-card__formats">.mp3 .wav .flac .m4a .ogg .aac .wma .opus</div>
+    </a>
+
+    <a href="/transtr" class="tool-card tool-card--summarize">
+        <div class="tool-card__icon">&#9998;</div>
+        <h2 class="tool-card__title">Summarize</h2>
+        <p class="tool-card__desc">Summarize transcripts with local or cloud LLMs</p>
+        <div class="tool-card__formats">.txt .md .csv .rtf .tsv</div>
+    </a>
+</div>
+
+{% if recent_jobs %}
+<div class="section">
+    <h2 class="section-title">Recent Jobs</h2>
+    <div class="jobs-list">
+        {% for job in recent_jobs %}
+        <div class="job-row">
+            <div class="job-row__info">
+                <span class="job-row__type badge badge--{{ job.job_type }}">{{ job.job_type }}</span>
+                <span class="job-row__filename">{{ job.input_filename }}</span>
+            </div>
+            <div class="job-row__status">
+                {% if job.status == "completed" %}
+                    <span class="badge badge--success">Completed</span>
+                {% elif job.status == "running" %}
+                    <span class="badge badge--running">Running {{ job.progress }}%</span>
+                {% elif job.status == "failed" %}
+                    <span class="badge badge--error">Failed</span>
+                {% else %}
+                    <span class="badge badge--pending">Pending</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

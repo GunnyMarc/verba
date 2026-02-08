@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Verba — Video Transcription{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Video Transcription</h1>
+    <p class="subtitle">Upload a video file to extract and transcribe speech</p>
+</div>
+
+<div class="card form-card">
+    <form hx-post="/videotr/upload"
+          hx-target="#result-area"
+          hx-swap="innerHTML"
+          hx-encoding="multipart/form-data"
+          hx-indicator="#upload-indicator">
+
+        <div class="form-row">
+            <label class="toggle-label">
+                <input type="checkbox" name="batch_process" value="on"
+                       onchange="document.getElementById('file-input-group').style.display = this.checked ? 'none' : 'block'">
+                <span class="toggle-text">Batch Process</span>
+                <span class="toggle-hint">Process all files in videotr/input/</span>
+            </label>
+        </div>
+
+        <div id="file-input-group" class="form-row">
+            <label class="form-label" for="file">Video File</label>
+            <input type="file" id="file" name="file"
+                   accept=".mov,.mp4,.mkv,.mpeg,.avi,.webm"
+                   class="file-input">
+            <span class="form-hint">Supported: {{ supported_formats }}</span>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-row">
+                <label class="form-label" for="model">Whisper Model</label>
+                <select id="model" name="model" class="form-select">
+                    {% for m in whisper_models %}
+                    <option value="{{ m }}" {% if m == settings.whisper_model %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label class="form-label" for="style">Markdown Style</label>
+                <select id="style" name="style" class="form-select">
+                    {% for s in markdown_styles %}
+                    <option value="{{ s }}" {% if s == settings.markdown_style %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label class="form-label" for="language">Language</label>
+                <input type="text" id="language" name="language"
+                       value="{{ settings.language }}"
+                       placeholder="auto"
+                       class="form-input">
+                <span class="form-hint">ISO 639-1 code or "auto"</span>
+            </div>
+
+            <div class="form-row">
+                <label class="form-label" for="device">Device</label>
+                <select id="device" name="device" class="form-select">
+                    {% for d in device_choices %}
+                    <option value="{{ d }}" {% if d == settings.device %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <label class="toggle-label">
+                <input type="checkbox" name="include_metadata" value="on"
+                       {% if settings.include_metadata %}checked{% endif %}>
+                <span class="toggle-text">Include Metadata</span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">
+                <span class="btn-text">Transcribe</span>
+                <span id="upload-indicator" class="htmx-indicator spinner"></span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="result-area"></div>
+{% endblock %}

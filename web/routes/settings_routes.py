@@ -1,0 +1,73 @@
+from fastapi import APIRouter, Request, Form
+from fastapi.responses import HTMLResponse
+
+from ..config import (
+    WHISPER_MODELS, DEVICE_CHOICES, MARKDOWN_STYLES,
+    VENDOR_DISPLAY_NAMES,
+)
+
+router = APIRouter()
+
+
+@router.get("")
+async def settings_page(request: Request):
+    templates = request.app.state.templates
+    settings = request.app.state.settings
+    keystore = request.app.state.keystore
+    return templates.TemplateResponse("settings.html", {
+        "request": request,
+        "active_page": "settings",
+        "settings": settings,
+        "whisper_models": WHISPER_MODELS,
+        "device_choices": DEVICE_CHOICES,
+        "markdown_styles": MARKDOWN_STYLES,
+        "vendor_names": VENDOR_DISPLAY_NAMES,
+        "stored_vendors": keystore.stored_vendors(),
+    })
+
+
+@router.post("")
+async def settings_update(
+    request: Request,
+    whisper_model: str = Form(""),
+    device: str = Form(""),
+    language: str = Form(""),
+    markdown_style: str = Form(""),
+    include_metadata: str = Form(""),
+    ollama_base_url: str = Form(""),
+    api_vendor: str = Form(""),
+    api_key: str = Form(""),
+):
+    settings = request.app.state.settings
+    keystore = request.app.state.keystore
+    templates = request.app.state.templates
+
+    # Update transcription settings
+    if whisper_model:
+        settings.whisper_model = whisper_model
+    if device:
+        settings.device = device
+    if language:
+        settings.language = language
+    if markdown_style:
+        settings.markdown_style = markdown_style
+    settings.include_metadata = include_metadata == "on"
+    if ollama_base_url:
+        settings.ollama_base_url = ollama_base_url
+
+    # Save API key if provided
+    if api_vendor and api_key:
+        keystore.save_key(api_vendor, api_key)
+        keystore.apply_to_env()
+
+    return templates.TemplateResponse("settings.html", {
+        "request": request,
+        "active_page": "settings",
+        "settings": settings,
+        "whisper_models": WHISPER_MODELS,
+        "device_choices": DEVICE_CHOICES,
+        "markdown_styles": MARKDOWN_STYLES,
+        "vendor_names": VENDOR_DISPLAY_NAMES,
+        "stored_vendors": keystore.stored_vendors(),
+        "saved": True,
+    })

@@ -1,0 +1,128 @@
+<div class="card result-card {% if job.status == 'failed' %}result-card--error{% else %}result-card--success{% endif %}">
+
+{% if job.status == "failed" %}
+    <div class="result-header result-header--error">
+        <span class="result-icon">&#10007;</span>
+        <span class="result-title">Processing Failed</span>
+    </div>
+    <div class="result-body">
+        <p class="error-text">{{ job.error }}</p>
+    </div>
+
+{% elif job.result and job.result.type == "batch" %}
+    <div class="result-header">
+        <span class="result-icon">&#10003;</span>
+        <span class="result-title">Batch Complete</span>
+    </div>
+    <div class="result-body">
+        <div class="result-meta">
+            <div class="meta-item">
+                <span class="meta-label">Total</span>
+                <span class="meta-value">{{ job.result.total }}</span>
+            </div>
+            <div class="meta-item meta-item--success">
+                <span class="meta-label">Succeeded</span>
+                <span class="meta-value">{{ job.result.success_count }}</span>
+            </div>
+            {% if job.result.failed_count > 0 %}
+            <div class="meta-item meta-item--error">
+                <span class="meta-label">Failed</span>
+                <span class="meta-value">{{ job.result.failed_count }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="batch-results">
+            {% for item in job.result.results %}
+            <div class="batch-item {% if item.success %}batch-item--ok{% else %}batch-item--fail{% endif %}">
+                <span class="batch-file">{{ item.file }}</span>
+                {% if item.success %}
+                    <span class="badge badge--success">OK</span>
+                {% else %}
+                    <span class="badge badge--error">Failed</span>
+                    {% if item.error %}<span class="batch-error">{{ item.error }}</span>{% endif %}
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+{% elif job.result %}
+    <div class="result-header">
+        <span class="result-icon">&#10003;</span>
+        <span class="result-title">Complete</span>
+    </div>
+    <div class="result-body">
+        <div class="result-meta">
+            {% if tool in ("videotr", "audiotr") %}
+                {% set info = job.result.get("video_info") or job.result.get("audio_info") or {} %}
+                {% if info.get("duration") %}
+                <div class="meta-item">
+                    <span class="meta-label">Duration</span>
+                    <span class="meta-value">{{ info.duration }}</span>
+                </div>
+                {% endif %}
+                {% if job.result.language %}
+                <div class="meta-item">
+                    <span class="meta-label">Language</span>
+                    <span class="meta-value">{{ job.result.language }}</span>
+                </div>
+                {% endif %}
+                {% if job.result.word_count %}
+                <div class="meta-item">
+                    <span class="meta-label">Words</span>
+                    <span class="meta-value">{{ "{:,}".format(job.result.word_count) }}</span>
+                </div>
+                {% endif %}
+                {% if job.result.segment_count %}
+                <div class="meta-item">
+                    <span class="meta-label">Segments</span>
+                    <span class="meta-value">{{ "{:,}".format(job.result.segment_count) }}</span>
+                </div>
+                {% endif %}
+            {% elif tool == "transtr" %}
+                {% if job.result.model_used %}
+                <div class="meta-item">
+                    <span class="meta-label">Model</span>
+                    <span class="meta-value">{{ job.result.model_used }}</span>
+                </div>
+                {% endif %}
+                {% if job.result.input_length %}
+                <div class="meta-item">
+                    <span class="meta-label">Input</span>
+                    <span class="meta-value">{{ "{:,}".format(job.result.input_length) }} chars</span>
+                </div>
+                {% endif %}
+                {% if job.result.output_length %}
+                <div class="meta-item">
+                    <span class="meta-label">Output</span>
+                    <span class="meta-value">{{ "{:,}".format(job.result.output_length) }} chars</span>
+                </div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        {% if job.result.markdown_content %}
+        <div class="result-preview">
+            <h3 class="preview-title">Output Preview</h3>
+            <pre class="code-preview">{{ job.result.markdown_content[:2000] }}{% if job.result.markdown_content|length > 2000 %}...{% endif %}</pre>
+        </div>
+        {% endif %}
+
+        {% if job.result.summary %}
+        <div class="result-preview">
+            <h3 class="preview-title">Summary</h3>
+            <div class="summary-text">{{ job.result.summary }}</div>
+        </div>
+        {% endif %}
+
+        {% if tool in ("videotr", "audiotr") and job.result.output_path %}
+        <div class="result-actions">
+            <a href="/{{ tool }}/jobs/{{ job.id }}/download" class="btn btn--download">
+                Download Markdown
+            </a>
+        </div>
+        {% endif %}
+    </div>
+{% endif %}
+</div>

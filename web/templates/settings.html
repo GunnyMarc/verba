@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Verba — Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Settings</h1>
+    <p class="subtitle">Configure transcription defaults and API keys</p>
+</div>
+
+{% if saved %}
+<div class="alert alert--success">Settings saved successfully.</div>
+{% endif %}
+
+<form hx-post="/settings"
+      hx-target="body"
+      hx-swap="innerHTML"
+      hx-indicator="#save-indicator">
+
+    <div class="card form-card">
+        <h2 class="card-title">Transcription</h2>
+
+        <div class="form-grid">
+            <div class="form-row">
+                <label class="form-label" for="whisper_model">Whisper Model</label>
+                <select id="whisper_model" name="whisper_model" class="form-select">
+                    {% for m in whisper_models %}
+                    <option value="{{ m }}" {% if m == settings.whisper_model %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label class="form-label" for="device">Device</label>
+                <select id="device" name="device" class="form-select">
+                    {% for d in device_choices %}
+                    <option value="{{ d }}" {% if d == settings.device %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label class="form-label" for="language">Language</label>
+                <input type="text" id="language" name="language"
+                       value="{{ settings.language }}"
+                       placeholder="auto"
+                       class="form-input">
+            </div>
+
+            <div class="form-row">
+                <label class="form-label" for="markdown_style">Markdown Style</label>
+                <select id="markdown_style" name="markdown_style" class="form-select">
+                    {% for s in markdown_styles %}
+                    <option value="{{ s }}" {% if s == settings.markdown_style %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <label class="toggle-label">
+                <input type="checkbox" name="include_metadata" value="on"
+                       {% if settings.include_metadata %}checked{% endif %}>
+                <span class="toggle-text">Include Metadata</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="card form-card">
+        <h2 class="card-title">Summarization</h2>
+
+        <div class="form-row">
+            <label class="form-label" for="ollama_base_url">Ollama Base URL</label>
+            <input type="text" id="ollama_base_url" name="ollama_base_url"
+                   value="{{ settings.ollama_base_url }}"
+                   class="form-input">
+        </div>
+    </div>
+
+    <div class="card form-card">
+        <h2 class="card-title">API Keys</h2>
+
+        {% if stored_vendors %}
+        <div class="stored-keys">
+            <span class="form-label">Stored:</span>
+            {% for vendor in stored_vendors %}
+            <span class="badge badge--key">{{ vendor_names.get(vendor, vendor) }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-grid">
+            <div class="form-row">
+                <label class="form-label" for="api_vendor">Vendor</label>
+                <select id="api_vendor" name="api_vendor" class="form-select">
+                    <option value="">-- Select --</option>
+                    {% for key, name in vendor_names.items() %}
+                    <option value="{{ key }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label class="form-label" for="api_key">API Key</label>
+                <input type="password" id="api_key" name="api_key"
+                       placeholder="Enter API key"
+                       class="form-input">
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn--primary">
+            <span class="btn-text">Save Settings</span>
+            <span id="save-indicator" class="htmx-indicator spinner"></span>
+        </button>
+    </div>
+</form>
+{% endblock %}

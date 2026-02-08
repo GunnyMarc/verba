@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Verba — Summarize Transcript{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Transcript Summarization</h1>
+    <p class="subtitle">Summarize transcripts using local or cloud LLMs</p>
+</div>
+
+<div class="card form-card">
+    <form hx-post="/transtr/process"
+          hx-target="#result-area"
+          hx-swap="innerHTML"
+          hx-encoding="multipart/form-data"
+          hx-indicator="#process-indicator">
+
+        <div class="form-row">
+            <label class="toggle-label">
+                <input type="checkbox" name="batch_process" value="on"
+                       onchange="document.getElementById('text-input-group').style.display = this.checked ? 'none' : 'block'; document.getElementById('file-input-group').style.display = this.checked ? 'none' : 'block'">
+                <span class="toggle-text">Batch Process</span>
+                <span class="toggle-hint">Process all files in transtr/input/</span>
+            </label>
+        </div>
+
+        <div id="text-input-group" class="form-row">
+            <label class="form-label" for="text">Transcript Text</label>
+            <textarea id="text" name="text" rows="8" class="form-textarea"
+                      placeholder="Paste your transcript text here..."></textarea>
+        </div>
+
+        <div id="file-input-group" class="form-row">
+            <label class="form-label" for="file">Or Upload File</label>
+            <input type="file" id="file" name="file"
+                   accept=".txt,.md,.csv,.rtf,.tsv"
+                   class="file-input">
+            <span class="form-hint">Supported: {{ supported_formats }}</span>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-row">
+                <label class="form-label" for="model">LLM Model</label>
+                <select id="model" name="model" class="form-select">
+                    {% for category, models in available_models.items() %}
+                    <optgroup label="{{ category }}">
+                        {% for m in models %}
+                        <option value="{{ m }}">{{ model_labels.get(m, m) }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <label class="form-label" for="instructions">Instructions</label>
+            <textarea id="instructions" name="instructions" rows="4" class="form-textarea"
+                      placeholder="Summarize the following transcript clearly and concisely.">Summarize the following transcript clearly and concisely.</textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">
+                <span class="btn-text">Summarize</span>
+                <span id="process-indicator" class="htmx-indicator spinner"></span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="result-area"></div>
+{% endblock %}
