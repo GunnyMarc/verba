@@ -105,7 +105,7 @@ async def browse_directories(request: Request, path: str = "", target: str = "")
     dirs = []
     try:
         for entry in sorted(browse_path.iterdir()):
-            if entry.is_dir() and not entry.name.startswith("."):
+            if entry.is_dir():
                 dirs.append(entry.name)
     except PermissionError:
         pass
