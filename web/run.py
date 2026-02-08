@@ -71,7 +71,7 @@ def main():
 
     uvicorn.run(
         "web.app:app",
-        host="0.0.0.0",
+        host="localhost",
         port=30319,
         reload=True,
         ssl_certfile=str(CERT_FILE),
