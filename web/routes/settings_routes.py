@@ -92,3 +92,28 @@ async def settings_update(
         "stored_vendors": keystore.stored_vendors(),
         "saved": True,
     })
+
+
+@router.get("/browse")
+async def browse_directories(request: Request, path: str = "", target: str = ""):
+    templates = request.app.state.templates
+
+    browse_path = Path(path) if path else Path.home()
+    if not browse_path.is_dir():
+        browse_path = browse_path.parent if browse_path.parent.is_dir() else Path.home()
+
+    dirs = []
+    try:
+        for entry in sorted(browse_path.iterdir()):
+            if entry.is_dir() and not entry.name.startswith("."):
+                dirs.append(entry.name)
+    except PermissionError:
+        pass
+
+    return templates.TemplateResponse("partials/browse.html", {
+        "request": request,
+        "current_path": str(browse_path),
+        "parent_path": str(browse_path.parent),
+        "dirs": dirs,
+        "target": target,
+    })
