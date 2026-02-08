@@ -12,8 +12,6 @@ from ..jobs import JobStatus
 
 router = APIRouter()
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-
 
 @router.get("")
 async def videotr_form(request: Request):
@@ -46,7 +44,7 @@ async def videotr_upload(
     job_manager = request.app.state.job_manager
     executor = request.app.state.executor
     upload_dir = request.app.state.upload_dir
-    output_dir = request.app.state.output_dir
+    output_dir = Path(settings.video_output_dir)
 
     # Build job settings from form or defaults
     job_settings = {
@@ -59,7 +57,7 @@ async def videotr_upload(
 
     # Batch mode
     if batch_process == "on":
-        input_dir = REPO_ROOT / "videotr" / "input"
+        input_dir = Path(settings.video_input_dir)
         file_paths = [
             str(f) for f in input_dir.iterdir()
             if f.is_file() and f.suffix.lower() in VIDEO_FORMATS

@@ -12,8 +12,6 @@ from ..jobs import JobStatus
 
 router = APIRouter()
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-
 
 @router.get("")
 async def audiotr_form(request: Request):
@@ -46,7 +44,7 @@ async def audiotr_upload(
     job_manager = request.app.state.job_manager
     executor = request.app.state.executor
     upload_dir = request.app.state.upload_dir
-    output_dir = request.app.state.output_dir
+    output_dir = Path(settings.audio_output_dir)
 
     job_settings = {
         "whisper_model": model or settings.whisper_model,
@@ -58,7 +56,7 @@ async def audiotr_upload(
 
     # Batch mode
     if batch_process == "on":
-        input_dir = REPO_ROOT / "audiotr" / "input"
+        input_dir = Path(settings.audio_input_dir)
         file_paths = [
             str(f) for f in input_dir.iterdir()
             if f.is_file() and f.suffix.lower() in AUDIO_FORMATS

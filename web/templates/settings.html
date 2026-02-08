@@ -77,6 +77,54 @@
     </div>
 
     <div class="card form-card">
+        <h2 class="card-title">File Locations</h2>
+
+        <div class="form-grid">
+            <div class="form-row">
+                <label class="form-label" for="video_input_dir">Video Input</label>
+                <input type="text" id="video_input_dir" name="video_input_dir"
+                       value="{{ settings.video_input_dir }}"
+                       class="form-input">
+            </div>
+
+            <div class="form-row">
+                <label class="form-label" for="video_output_dir">Video Transcribe Output</label>
+                <input type="text" id="video_output_dir" name="video_output_dir"
+                       value="{{ settings.video_output_dir }}"
+                       class="form-input">
+            </div>
+
+            <div class="form-row">
+                <label class="form-label" for="audio_input_dir">Audio Input</label>
+                <input type="text" id="audio_input_dir" name="audio_input_dir"
+                       value="{{ settings.audio_input_dir }}"
+                       class="form-input">
+            </div>
+
+            <div class="form-row">
+                <label class="form-label" for="audio_output_dir">Audio Transcribe Output</label>
+                <input type="text" id="audio_output_dir" name="audio_output_dir"
+                       value="{{ settings.audio_output_dir }}"
+                       class="form-input">
+            </div>
+
+            <div class="form-row">
+                <label class="form-label" for="summary_input_dir">Summary Input</label>
+                <input type="text" id="summary_input_dir" name="summary_input_dir"
+                       value="{{ settings.summary_input_dir }}"
+                       class="form-input">
+            </div>
+
+            <div class="form-row">
+                <label class="form-label" for="summary_output_dir">Summary Output</label>
+                <input type="text" id="summary_output_dir" name="summary_output_dir"
+                       value="{{ settings.summary_output_dir }}"
+                       class="form-input">
+            </div>
+        </div>
+    </div>
+
+    <div class="card form-card">
         <h2 class="card-title">API Keys</h2>
 
         {% if stored_vendors %}

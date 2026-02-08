@@ -10,8 +10,6 @@ from ..jobs import JobStatus
 
 router = APIRouter()
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-
 
 @router.get("")
 async def transtr_form(request: Request):
@@ -50,7 +48,7 @@ async def transtr_process(
 
     # Batch mode
     if batch_process == "on":
-        input_dir = REPO_ROOT / "transtr" / "input"
+        input_dir = Path(settings.summary_input_dir)
         texts = []
         for f in sorted(input_dir.iterdir()):
             if f.is_file() and f.suffix.lower() in TRANSCRIPT_FORMATS:

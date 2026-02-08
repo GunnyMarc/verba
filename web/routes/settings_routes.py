@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse
 
@@ -35,6 +37,12 @@ async def settings_update(
     markdown_style: str = Form(""),
     include_metadata: str = Form(""),
     ollama_base_url: str = Form(""),
+    video_input_dir: str = Form(""),
+    video_output_dir: str = Form(""),
+    audio_input_dir: str = Form(""),
+    audio_output_dir: str = Form(""),
+    summary_input_dir: str = Form(""),
+    summary_output_dir: str = Form(""),
     api_vendor: str = Form(""),
     api_key: str = Form(""),
 ):
@@ -54,6 +62,19 @@ async def settings_update(
     settings.include_metadata = include_metadata == "on"
     if ollama_base_url:
         settings.ollama_base_url = ollama_base_url
+
+    # Update file location settings
+    for field_name, field_value in (
+        ("video_input_dir", video_input_dir),
+        ("video_output_dir", video_output_dir),
+        ("audio_input_dir", audio_input_dir),
+        ("audio_output_dir", audio_output_dir),
+        ("summary_input_dir", summary_input_dir),
+        ("summary_output_dir", summary_output_dir),
+    ):
+        if field_value:
+            setattr(settings, field_name, field_value)
+            Path(field_value).mkdir(parents=True, exist_ok=True)
 
     # Save API key if provided
     if api_vendor and api_key:

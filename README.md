@@ -119,12 +119,12 @@ verba/
 |-----------|---------|
 | `web/webui/` | Python virtual environment (created by `verba.sh --start`) |
 | `web/uploads/` | Temporarily stores uploaded files |
-| `web/output/` | Stores generated transcripts/summaries |
+| `web/output/` | Default output directory for transcripts/summaries (configurable via Settings) |
 | `web/certs/` | Auto-generated self-signed TLS certificate and key (`cert.pem`, `key.pem`) |
 | `web/log/` | Timestamped server log files |
-| `videotr/input/` | Drop folder for video batch processing |
-| `audiotr/input/` | Drop folder for audio batch processing |
-| `transtr/input/` | Drop folder for transcript batch processing |
+| `videotr/input/` | Default video batch input (configurable via Settings) |
+| `audiotr/input/` | Default audio batch input (configurable via Settings) |
+| `transtr/input/` | Default transcript batch input (configurable via Settings) |
 
 ## Usage
 
@@ -193,6 +193,21 @@ Configurable via the Settings page or per-job overrides on each tool page:
 | Markdown Style | `simple`, `timestamped`, `detailed`, `srt_style` | `timestamped` |
 | Include Metadata | on/off | on |
 
+### File Locations
+
+Input and output directories for each tool are configurable from the Settings page under the **File Locations** section. These paths control where batch processing reads files from and where results are written.
+
+| Setting | Default | Used By |
+|---------|---------|---------|
+| Video Input | `videotr/input/` | Video batch processing input directory |
+| Video Transcribe Output | `web/output/` | Video transcription output (single and batch) |
+| Audio Input | `audiotr/input/` | Audio batch processing input directory |
+| Audio Transcribe Output | `web/output/` | Audio transcription output (single and batch) |
+| Summary Input | `transtr/input/` | Summary batch processing input directory |
+| Summary Output | `web/output/` | Reserved for future summary file output |
+
+Custom directories are created automatically when saved. Paths reset to defaults on application restart.
+
 ### API Keys
 
 API keys for cloud LLM providers are managed on the Settings page. Keys are encrypted at rest using Fernet symmetric encryption and injected into environment variables at startup.
@@ -201,7 +216,7 @@ Supported vendors: **OpenAI**, **Google**, **Anthropic**, **Ollama**, **Circuit*
 
 ### Batch Processing
 
-Each tool supports batch mode. Place files in the corresponding input directory and enable the "Batch Process" toggle:
+Each tool supports batch mode. Place files in the corresponding input directory (configurable under Settings > File Locations) and enable the "Batch Process" toggle on the tool page. Default input directories:
 
 - `videotr/input/` for video files
 - `audiotr/input/` for audio files

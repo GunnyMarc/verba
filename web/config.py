@@ -3,6 +3,7 @@ from pathlib import Path
 
 # Add repo root to sys.path so sibling packages can be imported
 REPO_ROOT = Path(__file__).resolve().parent.parent
+WEB_DIR = Path(__file__).resolve().parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
@@ -67,6 +68,13 @@ class WebSettings:
         self.markdown_style: str = "timestamped"
         self.include_metadata: bool = True
         self.ollama_base_url: str = "http://localhost:11434"
+        # File location settings
+        self.video_input_dir: str = str(REPO_ROOT / "videotr" / "input")
+        self.video_output_dir: str = str(WEB_DIR / "output")
+        self.audio_input_dir: str = str(REPO_ROOT / "audiotr" / "input")
+        self.audio_output_dir: str = str(WEB_DIR / "output")
+        self.summary_input_dir: str = str(REPO_ROOT / "transtr" / "input")
+        self.summary_output_dir: str = str(WEB_DIR / "output")
 
     def to_dict(self) -> dict:
         return {
@@ -76,6 +84,12 @@ class WebSettings:
             "markdown_style": self.markdown_style,
             "include_metadata": self.include_metadata,
             "ollama_base_url": self.ollama_base_url,
+            "video_input_dir": self.video_input_dir,
+            "video_output_dir": self.video_output_dir,
+            "audio_input_dir": self.audio_input_dir,
+            "audio_output_dir": self.audio_output_dir,
+            "summary_input_dir": self.summary_input_dir,
+            "summary_output_dir": self.summary_output_dir,
         }
 
     def update(self, **kwargs):
