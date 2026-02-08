@@ -132,8 +132,8 @@ verba/
 
 ```bash
 cd verba
-python -m venv venv
-source venv/bin/activate
+python -m venv verba
+source verba/bin/activate
 pip install -r web/requirements.txt
 ```
 
