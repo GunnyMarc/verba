@@ -84,7 +84,7 @@ class AudioProcessor:
 
         cmd = [
             "ffprobe",
-            "-v", "quiet",
+            "-v", "error",
             "-print_format", "json",
             "-show_format",
             "-show_streams",
