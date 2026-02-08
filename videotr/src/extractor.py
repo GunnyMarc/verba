@@ -163,10 +163,14 @@ class AudioExtractor:
                 f"Supported formats: {', '.join(sorted(SUPPORTED_FORMATS))}"
             )
 
-        # Get video info to check for audio
-        info = self.get_video_info(video_path)
-        if not info["has_audio"]:
-            raise AudioExtractionError("Video file has no audio track")
+        # Check for audio track (non-fatal probe — let ffmpeg try regardless)
+        try:
+            info = self.get_video_info(video_path)
+            if not info["has_audio"]:
+                raise AudioExtractionError("Video file has no audio track")
+        except AudioExtractionError as e:
+            if "no audio track" in str(e):
+                raise
 
         # Generate output path if not provided
         if output_path is None:

@@ -151,9 +151,12 @@ class TranscriptionPipeline:
                     error=f"Unsupported format: {ext}"
                 )
 
-            # Get audio info
+            # Get audio info (non-fatal — metadata is optional)
             update_progress(0.05, "Getting audio information...")
-            audio_info = self.processor.get_audio_info(audio_path)
+            try:
+                audio_info = self.processor.get_audio_info(audio_path)
+            except AudioProcessingError:
+                audio_info = {}
 
             # Prepare audio for transcription
             update_progress(0.1, "Preparing audio for transcription...")

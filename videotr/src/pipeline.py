@@ -150,11 +150,14 @@ class TranscriptionPipeline:
                     error=f"Unsupported format: {ext}"
                 )
 
-            # Get video info
+            # Get video info (non-fatal — metadata is optional)
             update_progress(0.05, "Getting video information...")
-            video_info = self.extractor.get_video_info(video_path)
+            try:
+                video_info = self.extractor.get_video_info(video_path)
+            except AudioExtractionError:
+                video_info = {}
 
-            if not video_info.get("has_audio"):
+            if video_info and not video_info.get("has_audio"):
                 return PipelineResult(
                     success=False,
                     video_path=video_path,
