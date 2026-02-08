@@ -23,12 +23,27 @@
             </label>
         </div>
 
+        <div id="form-error" class="alert alert--error" style="display:none"></div>
+
         <div id="file-input-group" class="form-row">
-            <label class="form-label" for="file">Video File</label>
+            <label class="form-label" for="file">Video Input File</label>
             <input type="file" id="file" name="file"
                    accept=".mov,.mp4,.mkv,.mpeg,.avi,.webm"
                    class="file-input">
             <span class="form-hint">Supported: {{ supported_formats }}</span>
+        </div>
+
+        <div class="form-row">
+            <label class="form-label" for="output_dir">Video File Output</label>
+            <div class="input-with-browse">
+                <input type="text" id="output_dir" name="output_dir"
+                       value="{{ settings.video_output_dir }}"
+                       class="form-input">
+                <button type="button" class="btn btn--browse"
+                        onclick="document.getElementById('browse-modal').style.display='flex'; htmx.ajax('GET', '/videotr/browse?path=' + encodeURIComponent(document.getElementById('output_dir').value) + '&target=output_dir', '#browse-modal-content')">
+                    Browse
+                </button>
+            </div>
         </div>
 
         <div class="form-grid">
@@ -87,4 +102,50 @@
 </div>
 
 <div id="result-area"></div>
+
+<div id="browse-modal" class="browse-modal" style="display:none">
+    <div class="browse-modal-dialog" id="browse-modal-content"></div>
+</div>
+
+<script>
+document.body.addEventListener('htmx:confirm', function(evt) {
+    var form = evt.target.closest('form');
+    if (!form || !form.matches('[hx-post="/videotr/upload"]')) return;
+
+    var errorDiv = document.getElementById('form-error');
+    var fileGroup = document.getElementById('file-input-group');
+    var batchCheckbox = form.querySelector('input[name="batch_process"]');
+    var isBatch = batchCheckbox && batchCheckbox.checked;
+
+    // Single mode: check file input
+    if (!isBatch && fileGroup.style.display !== 'none') {
+        var fileInput = document.getElementById('file');
+        if (!fileInput.value) {
+            errorDiv.textContent = 'Please select a video input file.';
+            errorDiv.style.display = 'block';
+            evt.preventDefault();
+            return;
+        }
+    }
+
+    // Check output dir
+    var outputDir = document.getElementById('output_dir');
+    if (!outputDir.value.trim()) {
+        errorDiv.textContent = 'Please select a video file output location.';
+        errorDiv.style.display = 'block';
+        evt.preventDefault();
+        return;
+    }
+
+    errorDiv.style.display = 'none';
+});
+
+// Auto-hide error when user interacts with the fields
+document.getElementById('file').addEventListener('change', function() {
+    document.getElementById('form-error').style.display = 'none';
+});
+document.getElementById('output_dir').addEventListener('input', function() {
+    document.getElementById('form-error').style.display = 'none';
+});
+</script>
 {% endblock %}

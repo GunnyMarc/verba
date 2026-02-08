@@ -4,6 +4,7 @@ Speech-to-text transcription module using OpenAI Whisper.
 Converts audio to text with timestamp information.
 """
 
+import locale
 import os
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
@@ -121,7 +122,7 @@ class Transcriber:
             import torch
 
             # Determine device
-            if self.device is None:
+            if self.device is None or self.device == "auto":
                 self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
             print(f"Loading Whisper model '{self.model_name}' on {self.device}...")
@@ -162,6 +163,14 @@ class Transcriber:
         """
         if not os.path.exists(audio_path):
             raise TranscriptionError(f"Audio file not found: {audio_path}")
+
+        # Resolve "auto" to the host's default locale language code
+        if language is None or language == "auto":
+            try:
+                loc = locale.getdefaultlocale()[0]  # e.g. "en_US"
+                language = loc.split("_")[0] if loc else None
+            except Exception:
+                language = None
 
         # Load model if not already loaded
         self.load_model()

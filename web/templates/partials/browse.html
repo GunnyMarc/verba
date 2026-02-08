@@ -8,14 +8,14 @@
 <div class="browse-list">
     {% if current_path != parent_path %}
     <a class="browse-item browse-item--parent"
-       hx-get="/settings/browse?path={{ parent_path }}&target={{ target }}"
+       hx-get="{{ browse_url }}?path={{ parent_path }}&target={{ target }}"
        hx-target="#browse-modal-content"
        hx-swap="innerHTML">..</a>
     {% endif %}
 
     {% for d in dirs %}
     <a class="browse-item"
-       hx-get="/settings/browse?path={{ current_path }}/{{ d }}&target={{ target }}"
+       hx-get="{{ browse_url }}?path={{ current_path }}/{{ d }}&target={{ target }}"
        hx-target="#browse-modal-content"
        hx-swap="innerHTML">{{ d }}</a>
     {% endfor %}

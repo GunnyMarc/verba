@@ -28,6 +28,32 @@ async def videotr_form(request: Request):
     })
 
 
+@router.get("/browse")
+async def browse_directories(request: Request, path: str = "", target: str = ""):
+    templates = request.app.state.templates
+
+    browse_path = Path(path) if path else Path.home()
+    if not browse_path.is_dir():
+        browse_path = browse_path.parent if browse_path.parent.is_dir() else Path.home()
+
+    dirs = []
+    try:
+        for entry in sorted(browse_path.iterdir()):
+            if entry.is_dir():
+                dirs.append(entry.name)
+    except PermissionError:
+        pass
+
+    return templates.TemplateResponse("partials/browse.html", {
+        "request": request,
+        "current_path": str(browse_path),
+        "parent_path": str(browse_path.parent),
+        "dirs": dirs,
+        "target": target,
+        "browse_url": "/videotr/browse",
+    })
+
+
 @router.post("/upload")
 async def videotr_upload(
     request: Request,
@@ -38,13 +64,15 @@ async def videotr_upload(
     device: str = Form(""),
     include_metadata: str = Form(""),
     batch_process: str = Form(""),
+    output_dir: str = Form(""),
 ):
     templates = request.app.state.templates
     settings = request.app.state.settings
     job_manager = request.app.state.job_manager
     executor = request.app.state.executor
     upload_dir = request.app.state.upload_dir
-    output_dir = Path(settings.video_output_dir)
+    resolved_output = Path(output_dir) if output_dir else Path(settings.video_output_dir)
+    resolved_output.mkdir(parents=True, exist_ok=True)
 
     # Build job settings from form or defaults
     job_settings = {
@@ -68,7 +96,7 @@ async def videotr_upload(
                 "error": "No video files found in videotr/input/ directory.",
             })
         job = job_manager.create_job("videotr", f"Batch ({len(file_paths)} files)", job_settings)
-        executor.submit(VideotrAdapter.run_batch, job, file_paths, str(output_dir), job_settings)
+        executor.submit(VideotrAdapter.run_batch, job, file_paths, str(resolved_output), job_settings)
         return templates.TemplateResponse("partials/progress.html", {
             "request": request,
             "job_id": job.id,
@@ -96,7 +124,7 @@ async def videotr_upload(
     save_path.write_bytes(content)
 
     job = job_manager.create_job("videotr", file.filename, job_settings)
-    executor.submit(VideotrAdapter.run, job, str(save_path), str(output_dir), job_settings)
+    executor.submit(VideotrAdapter.run, job, str(save_path), str(resolved_output), job_settings)
 
     return templates.TemplateResponse("partials/progress.html", {
         "request": request,
