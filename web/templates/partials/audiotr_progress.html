@@ -1,0 +1,43 @@
+<div class="card progress-container"
+     hx-ext="sse"
+     sse-connect="/audiotr/jobs/{{ job_id }}/stream"
+     sse-close="complete">
+
+    <div class="progress-header">
+        <span class="progress-title">Processing...</span>
+        <span class="progress-id">Job {{ job_id }}</span>
+    </div>
+
+    <div sse-swap="progress">
+        <div class="progress-track">
+            <div class="progress-bar" style="width: 0%">
+                <span class="progress-pct">0%</span>
+            </div>
+        </div>
+        <div class="progress-message">Starting...</div>
+    </div>
+
+    <div class="verbose-log" id="verbose-log" sse-swap="log" hx-swap="beforeend">
+    </div>
+
+    <div class="progress-error" style="display:none"
+         sse-swap="error">
+    </div>
+
+    <div hx-trigger="sse:complete"
+         hx-get="/audiotr/jobs/{{ job_id }}/result"
+         hx-target="closest .progress-container"
+         hx-swap="outerHTML">
+    </div>
+</div>
+
+<script>
+(function() {
+    var logEl = document.getElementById('verbose-log');
+    if (logEl) {
+        new MutationObserver(function() {
+            logEl.scrollTop = logEl.scrollHeight;
+        }).observe(logEl, {childList: true});
+    }
+})();
+</script>

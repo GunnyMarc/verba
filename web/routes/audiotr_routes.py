@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from html import escape
 from pathlib import Path
 
 from fastapi import APIRouter, Request, UploadFile, File, Form
@@ -28,6 +29,32 @@ async def audiotr_form(request: Request):
     })
 
 
+@router.get("/browse")
+async def browse_directories(request: Request, path: str = "", target: str = ""):
+    templates = request.app.state.templates
+
+    browse_path = Path(path) if path else Path.home()
+    if not browse_path.is_dir():
+        browse_path = browse_path.parent if browse_path.parent.is_dir() else Path.home()
+
+    dirs = []
+    try:
+        for entry in sorted(browse_path.iterdir()):
+            if entry.is_dir():
+                dirs.append(entry.name)
+    except PermissionError:
+        pass
+
+    return templates.TemplateResponse("partials/browse.html", {
+        "request": request,
+        "current_path": str(browse_path),
+        "parent_path": str(browse_path.parent),
+        "dirs": dirs,
+        "target": target,
+        "browse_url": "/audiotr/browse",
+    })
+
+
 @router.post("/upload")
 async def audiotr_upload(
     request: Request,
@@ -38,13 +65,15 @@ async def audiotr_upload(
     device: str = Form(""),
     include_metadata: str = Form(""),
     batch_process: str = Form(""),
+    output_dir: str = Form(""),
 ):
     templates = request.app.state.templates
     settings = request.app.state.settings
     job_manager = request.app.state.job_manager
     executor = request.app.state.executor
     upload_dir = request.app.state.upload_dir
-    output_dir = Path(settings.audio_output_dir)
+    resolved_output = Path(output_dir) if output_dir else Path(settings.audio_output_dir)
+    resolved_output.mkdir(parents=True, exist_ok=True)
 
     job_settings = {
         "whisper_model": model or settings.whisper_model,
@@ -67,11 +96,10 @@ async def audiotr_upload(
                 "error": "No audio files found in audiotr/input/ directory.",
             })
         job = job_manager.create_job("audiotr", f"Batch ({len(file_paths)} files)", job_settings)
-        executor.submit(AudiotrAdapter.run_batch, job, file_paths, str(output_dir), job_settings)
-        return templates.TemplateResponse("partials/progress.html", {
+        executor.submit(AudiotrAdapter.run_batch, job, file_paths, str(resolved_output), job_settings)
+        return templates.TemplateResponse("partials/audiotr_progress.html", {
             "request": request,
             "job_id": job.id,
-            "tool": "audiotr",
         })
 
     # Single file mode
@@ -94,12 +122,11 @@ async def audiotr_upload(
     save_path.write_bytes(content)
 
     job = job_manager.create_job("audiotr", file.filename, job_settings)
-    executor.submit(AudiotrAdapter.run, job, str(save_path), str(output_dir), job_settings)
+    executor.submit(AudiotrAdapter.run, job, str(save_path), str(resolved_output), job_settings)
 
-    return templates.TemplateResponse("partials/progress.html", {
+    return templates.TemplateResponse("partials/audiotr_progress.html", {
         "request": request,
         "job_id": job.id,
-        "tool": "audiotr",
     })
 
 
@@ -109,6 +136,7 @@ async def audiotr_stream(request: Request, job_id: str):
     templates = request.app.state.templates
 
     async def event_generator():
+        last_message = ""
         while True:
             if await request.is_disconnected():
                 break
@@ -124,7 +152,19 @@ async def audiotr_stream(request: Request, job_id: str):
             )
             yield {"event": "progress", "data": progress_html}
 
+            # Send verbose log entry when message changes
+            if job.progress_message and job.progress_message != last_message:
+                last_message = job.progress_message
+                safe_msg = escape(job.progress_message)
+                log_html = f'<div class="log-line">[{job.progress}%] {safe_msg}</div>'
+                yield {"event": "log", "data": log_html}
+
             if job.status in (JobStatus.COMPLETED, JobStatus.FAILED):
+                if job.status == JobStatus.COMPLETED:
+                    yield {"event": "log", "data": '<div class="log-line log-line--done">Transcription complete.</div>'}
+                else:
+                    safe_err = escape(job.error or "Unknown error")
+                    yield {"event": "log", "data": f'<div class="log-line log-line--error">Error: {safe_err}</div>'}
                 yield {"event": "complete", "data": ""}
                 break
 
