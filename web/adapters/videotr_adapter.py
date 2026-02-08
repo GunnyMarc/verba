@@ -24,7 +24,7 @@ class VideotrAdapter:
 
             input_path = Path(upload_path)
             stem = Path(original_name).stem if original_name else input_path.stem
-            output_path = Path(output_dir) / f"{stem}.md"
+            output_path = Path(output_dir) / f"{stem}_videotr.md"
 
             with suppress_stdout():
                 result = pipeline.process(
@@ -87,7 +87,7 @@ class VideotrAdapter:
                 )
 
                 input_path = Path(file_path)
-                output_path = Path(output_dir) / f"{input_path.stem}.md"
+                output_path = Path(output_dir) / f"{input_path.stem}_videotr.md"
 
                 with suppress_stdout():
                     result = pipeline.process(str(input_path), str(output_path), batch_callback)
