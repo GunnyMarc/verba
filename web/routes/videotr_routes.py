@@ -65,6 +65,7 @@ async def videotr_upload(
     device: str = Form(""),
     include_metadata: str = Form(""),
     batch_process: str = Form(""),
+    input_dir: str = Form(""),
     output_dir: str = Form(""),
 ):
     templates = request.app.state.templates
@@ -86,15 +87,15 @@ async def videotr_upload(
 
     # Batch mode
     if batch_process == "on":
-        input_dir = Path(settings.video_input_dir)
+        resolved_input = Path(input_dir) if input_dir else Path(settings.video_input_dir)
         file_paths = [
-            str(f) for f in input_dir.iterdir()
+            str(f) for f in resolved_input.iterdir()
             if f.is_file() and f.suffix.lower() in VIDEO_FORMATS
         ]
         if not file_paths:
             return templates.TemplateResponse("partials/error.html", {
                 "request": request,
-                "error": "No video files found in videotr/input/ directory.",
+                "error": f"No video files found in {resolved_input} directory.",
             })
         job = job_manager.create_job("videotr", f"Batch ({len(file_paths)} files)", job_settings)
         executor.submit(VideotrAdapter.run_batch, job, file_paths, str(resolved_output), job_settings)

@@ -17,9 +17,9 @@
         <div class="form-row">
             <label class="toggle-label">
                 <input type="checkbox" name="batch_process" value="on"
-                       onchange="document.getElementById('file-input-group').style.display = this.checked ? 'none' : 'block'">
+                       onchange="document.getElementById('file-input-group').style.display = this.checked ? 'none' : 'block'; document.getElementById('batch-input-group').style.display = this.checked ? 'block' : 'none'">
                 <span class="toggle-text">Batch Process</span>
-                <span class="toggle-hint">Process all files in audiotr/input/</span>
+                <span class="toggle-hint">Process all audio files in a directory</span>
             </label>
         </div>
 
@@ -31,6 +31,19 @@
                    accept=".mp3,.wav,.flac,.m4a,.ogg,.aac,.wma,.opus,.aiff,.alac"
                    class="file-input">
             <span class="form-hint">Supported: {{ supported_formats }}</span>
+        </div>
+
+        <div id="batch-input-group" class="form-row" style="display:none">
+            <label class="form-label" for="input_dir">Audio Input Directory</label>
+            <div class="input-with-browse">
+                <input type="text" id="input_dir" name="input_dir"
+                       value="{{ settings.audio_input_dir }}"
+                       class="form-input">
+                <button type="button" class="btn btn--browse"
+                        onclick="document.getElementById('browse-modal').style.display='flex'; htmx.ajax('GET', '/audiotr/browse?path=' + encodeURIComponent(document.getElementById('input_dir').value) + '&target=input_dir', '#browse-modal-content')">
+                    Browse
+                </button>
+            </div>
         </div>
 
         <div class="form-row">
@@ -150,6 +163,9 @@ document.getElementById('file').addEventListener('change', function() {
     document.getElementById('form-error').style.display = 'none';
 });
 document.getElementById('output_dir').addEventListener('input', function() {
+    document.getElementById('form-error').style.display = 'none';
+});
+document.getElementById('input_dir').addEventListener('input', function() {
     document.getElementById('form-error').style.display = 'none';
 });
 </script>
