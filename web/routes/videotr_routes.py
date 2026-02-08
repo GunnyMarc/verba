@@ -120,7 +120,17 @@ async def videotr_upload(
     # Save uploaded file
     unique_name = f"{uuid.uuid4().hex[:8]}_{file.filename}"
     save_path = upload_dir / unique_name
+    await file.seek(0)
     content = await file.read()
+    if not content:
+        return templates.TemplateResponse("partials/error.html", {
+            "request": request,
+            "error": (
+                "Upload failed — the file appears to be empty. "
+                "If the file is stored in iCloud or another cloud service, "
+                "ensure it is fully downloaded to your Mac before uploading."
+            ),
+        })
     save_path.write_bytes(content)
 
     job = job_manager.create_job("videotr", file.filename, job_settings)
