@@ -143,7 +143,7 @@ pip install -r web/requirements.txt
 python -m web.run
 ```
 
-The application starts on **http://0.0.0.0:30319** with hot-reload enabled.
+The application starts on **https://localhost:30319** with hot-reload enabled.
 
 To enable HTTPS, place `cert.pem` and `key.pem` in `web/certs/`.
 
