@@ -72,9 +72,6 @@ cmd_start() {
         python3 -m venv webui
         source webui/bin/activate
         pip install -r requirements.txt
-        pip install -r "${SCRIPT_DIR}/videotr/requirements.txt"
-        pip install -r "${SCRIPT_DIR}/audiotr/requirements.txt"
-        pip install -r "${SCRIPT_DIR}/transtr/requirements.txt"
         cd "$SCRIPT_DIR"
         log_info "Dependencies installed."
     fi
@@ -196,7 +193,7 @@ cmd_clear_cache() {
         cmd_stop
     fi
 
-    local app_dirs=("videotr" "audiotr" "web" "transtr")
+    local app_dirs=("web")
 
     # --- Remove web/webui venv ---
     if [[ -d "$VENV_DIR" ]]; then

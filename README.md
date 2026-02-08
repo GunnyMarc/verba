@@ -2,29 +2,33 @@
 
 A web-based media processing suite for transcribing video/audio files and summarizing transcripts using Whisper and LLMs.
 
-Built with **FastAPI**, **HTMX**, and **Jinja2**. Jobs run in background threads with real-time SSE progress streaming to the browser.
+Built with **FastAPI**, **HTMX**, and **Jinja2**. Jobs run in background threads with real-time SSE progress streaming to the browser. All traffic is served over **HTTPS on port 30319**.
 
 ## Application Architecture
 
 ### Overview
 
 ```
-Browser (HTMX) <──SSE/HTML──> FastAPI (Uvicorn) ──> Adapters ──> Processing Pipelines
-                                    │
-                                    ├── JobManager    (in-memory, thread-safe)
-                                    ├── KeyStore      (Fernet-encrypted API keys)
-                                    └── WebSettings   (mutable runtime config)
+Browser (HTMX) <──SSE/HTML──> FastAPI (Uvicorn/HTTPS) ──> Adapters ──> Processing Pipelines
+                                        │
+                                        ├── JobManager    (in-memory, thread-safe)
+                                        ├── KeyStore      (Fernet-encrypted API keys)
+                                        └── WebSettings   (mutable runtime config)
+
+  verba.sh ──> web/run.py ──> Uvicorn (HTTPS, localhost:30319, auto-reload)
+                   └── auto-generates self-signed TLS cert on first run
 ```
 
 ### Core Components
 
 | Component | File | Purpose |
 |-----------|------|---------|
+| **Startup Script** | `verba.sh` | Bash entry point for start/stop/status/log management; creates the virtual environment (`web/webui`) and launches the server as a background process |
 | **App Factory** | `web/app.py` | Creates the FastAPI app, mounts static files, registers route blueprints, and initializes shared state via the async lifespan context |
 | **Config** | `web/config.py` | Supported file formats, Whisper model/device choices, LLM model definitions, API key vendor mapping, and the `WebSettings` class |
 | **Job Manager** | `web/jobs.py` | Thread-safe `Job` and `JobManager` classes for creating, tracking, and querying processing jobs with progress callbacks |
 | **KeyStore** | `web/keystore.py` | Fernet-encrypted on-disk storage for API keys (`.verba.key` + `.verba_keys.dat`), with `apply_to_env()` to inject keys into environment variables |
-| **Entry Point** | `web/run.py` | Launches Uvicorn on port `30319` with hot-reload and optional SSL (`web/certs/`) |
+| **Entry Point** | `web/run.py` | Launches Uvicorn over HTTPS on `localhost:30319` with hot-reload; auto-generates a self-signed TLS certificate via the `cryptography` library if none exists |
 
 ### Processing Pipeline
 
@@ -67,13 +71,14 @@ Adapters wrap external sibling packages and expose a uniform `run()` / `run_batc
 verba/
 ├── README.md
 ├── .gitignore
+├── verba.sh                    # Startup script (start/stop/status/log/clear-cache)
 └── web/
     ├── __init__.py
     ├── app.py                  # FastAPI app factory & lifespan
     ├── config.py               # Settings, format constants, model defs
     ├── jobs.py                 # Job / JobManager (thread-safe)
     ├── keystore.py             # Fernet-encrypted API key storage
-    ├── run.py                  # Uvicorn entry point (port 30319)
+    ├── run.py                  # Uvicorn entry point (HTTPS, localhost:30319)
     ├── requirements.txt        # Python dependencies
     │
     ├── adapters/
@@ -112,9 +117,11 @@ verba/
 
 | Directory | Purpose |
 |-----------|---------|
+| `web/webui/` | Python virtual environment (created by `verba.sh --start`) |
 | `web/uploads/` | Temporarily stores uploaded files |
 | `web/output/` | Stores generated transcripts/summaries |
-| `web/certs/` | Optional SSL certificate and key (`cert.pem`, `key.pem`) |
+| `web/certs/` | Auto-generated self-signed TLS certificate and key (`cert.pem`, `key.pem`) |
+| `web/log/` | Timestamped server log files |
 | `videotr/input/` | Drop folder for video batch processing |
 | `audiotr/input/` | Drop folder for audio batch processing |
 | `transtr/input/` | Drop folder for transcript batch processing |
@@ -123,29 +130,48 @@ verba/
 
 ### Prerequisites
 
-- Python 3.10+
-- External sibling packages (`videotr`, `audiotr`, `transtr`) installed at the repo root for full pipeline functionality
+- Python 3.9+
 - For transcription: a Whisper-compatible environment
 - For summarization: Ollama running locally, or API keys for OpenAI / Google
 
-### Installation
+### Starting the Application
+
+```bash
+./verba.sh --start
+```
+
+On first run this will:
+1. Create a Python virtual environment in `web/webui/`
+2. Install all dependencies from `web/requirements.txt`
+3. Auto-generate a self-signed TLS certificate in `web/certs/`
+4. Launch the server as a background process
+
+Once started the application is available at **https://localhost:30319**.
+
+To use your own TLS certificate, place `cert.pem` and `key.pem` in `web/certs/` before starting.
+
+### Management Commands
+
+| Command | Description |
+|---------|-------------|
+| `./verba.sh --start` | Start the application in the background |
+| `./verba.sh --stop` | Gracefully stop the application (SIGTERM, 10s timeout) |
+| `./verba.sh --force-stop` | Force kill the application and any processes on port 30319 |
+| `./verba.sh --status` | Show running status, PID, URL, and latest log path |
+| `./verba.sh --log` | Tail the latest log file |
+| `./verba.sh --version` | Show version, port, and Python info |
+| `./verba.sh --clear-cache` | Stop the app, remove venv, `__pycache__`, and API key files |
+| `./verba.sh --help` | Show help message |
+
+### Manual Start (without verba.sh)
 
 ```bash
 cd verba
-python -m venv verba
-source verba/bin/activate
+python -m venv web/webui
+source web/webui/bin/activate
 pip install -r web/requirements.txt
-```
-
-### Running the Server
-
-```bash
 python -m web.run
 ```
-
-The application starts on **https://localhost:30319** with hot-reload enabled.
-
-To enable HTTPS, place `cert.pem` and `key.pem` in `web/certs/`.
 
 ### Supported File Formats
 
