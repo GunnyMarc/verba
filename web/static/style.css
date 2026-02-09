@@ -861,11 +861,55 @@ a:hover { color: var(--text-primary); }
     color: var(--color-primary);
 }
 
+.install-prompt {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: var(--space-sm);
+}
+
 .install-actions {
     display: flex;
     align-items: center;
     gap: var(--space-md);
     margin-top: var(--space-md);
+}
+
+.btn--yes {
+    background: linear-gradient(135deg, var(--color-success), #059669);
+    color: white;
+    border: none;
+    padding: var(--space-sm) var(--space-xl);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition);
+    letter-spacing: 0.04em;
+    box-shadow: 0 2px 12px var(--color-success-glow);
+}
+
+.btn--yes:hover {
+    box-shadow: 0 4px 20px var(--color-success-glow);
+    transform: translateY(-1px);
+}
+
+.btn--no {
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    color: var(--text-secondary);
+    padding: var(--space-sm) var(--space-xl);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition);
+    letter-spacing: 0.04em;
+}
+
+.btn--no:hover {
+    border-color: var(--color-error);
+    color: var(--color-error);
 }
 
 .btn--cancel {
