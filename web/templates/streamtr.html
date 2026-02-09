@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Verba — Streaming Transcription{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Streaming Transcription</h1>
+    <p class="subtitle">Transcribe live audio streams from a URL</p>
+</div>
+
+<div class="card form-card">
+    <div id="form-error" class="alert alert--error" style="display:none"></div>
+
+    <div class="form-row">
+        <label class="form-label" for="stream_url">Stream URL</label>
+        <input type="text" id="stream_url" name="stream_url"
+               placeholder="Enter stream URL"
+               class="form-input">
+    </div>
+
+    <div class="form-row">
+        <label class="form-label" for="output_dir">Output Directory</label>
+        <div class="input-with-browse">
+            <input type="text" id="output_dir" name="output_dir"
+                   value="{{ settings.stream_output_dir }}"
+                   class="form-input">
+            <button type="button" class="btn btn--browse"
+                    onclick="document.getElementById('browse-modal').style.display='flex'; htmx.ajax('GET', '/streamtr/browse?path=' + encodeURIComponent(document.getElementById('output_dir').value) + '&target=output_dir', '#browse-modal-content')">
+                Browse
+            </button>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="button" id="start-btn" class="btn btn--primary">
+            <span class="btn-text">Start Transcription</span>
+        </button>
+    </div>
+</div>
+
+<div id="result-area" style="display:none">
+</div>
+
+<div id="browse-modal" class="browse-modal" style="display:none">
+    <div class="browse-modal-dialog" id="browse-modal-content"></div>
+</div>
+
+<script>
+document.getElementById('start-btn').addEventListener('click', function() {
+    var errorDiv = document.getElementById('form-error');
+    var url = document.getElementById('stream_url').value.trim();
+    var outputDir = document.getElementById('output_dir').value.trim();
+
+    if (!url) {
+        errorDiv.textContent = 'Please enter a stream URL.';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    if (!outputDir) {
+        errorDiv.textContent = 'Please select an output directory.';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    errorDiv.style.display = 'none';
+});
+
+document.getElementById('stream_url').addEventListener('input', function() {
+    document.getElementById('form-error').style.display = 'none';
+});
+document.getElementById('output_dir').addEventListener('input', function() {
+    document.getElementById('form-error').style.display = 'none';
+});
+</script>
+{% endblock %}

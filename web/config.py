@@ -74,6 +74,7 @@ class WebSettings:
         self.video_output_dir: str = str(WEB_DIR / "output")
         self.audio_input_dir: str = str(REPO_ROOT / "audiotr" / "input")
         self.audio_output_dir: str = str(WEB_DIR / "output")
+        self.stream_output_dir: str = str(WEB_DIR / "output")
         self.summary_input_dir: str = str(REPO_ROOT / "transtr" / "input")
         self.summary_output_dir: str = str(WEB_DIR / "output")
 
@@ -89,6 +90,7 @@ class WebSettings:
             "video_output_dir": self.video_output_dir,
             "audio_input_dir": self.audio_input_dir,
             "audio_output_dir": self.audio_output_dir,
+            "stream_output_dir": self.stream_output_dir,
             "summary_input_dir": self.summary_input_dir,
             "summary_output_dir": self.summary_output_dir,
         }

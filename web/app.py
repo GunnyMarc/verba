@@ -35,6 +35,7 @@ async def lifespan(app: FastAPI):
     for dir_path in (
         settings.video_input_dir, settings.video_output_dir,
         settings.audio_input_dir, settings.audio_output_dir,
+        settings.stream_output_dir,
         settings.summary_input_dir, settings.summary_output_dir,
     ):
         Path(dir_path).mkdir(parents=True, exist_ok=True)
@@ -55,12 +56,14 @@ def create_app() -> FastAPI:
     from .routes.dashboard import router as dashboard_router
     from .routes.videotr_routes import router as videotr_router
     from .routes.audiotr_routes import router as audiotr_router
+    from .routes.streamtr_routes import router as streamtr_router
     from .routes.transtr_routes import router as transtr_router
     from .routes.settings_routes import router as settings_router
 
     app.include_router(dashboard_router)
     app.include_router(videotr_router, prefix="/videotr")
     app.include_router(audiotr_router, prefix="/audiotr")
+    app.include_router(streamtr_router, prefix="/streamtr")
     app.include_router(transtr_router, prefix="/transtr")
     app.include_router(settings_router, prefix="/settings")
 

@@ -255,6 +255,7 @@ a:hover { color: var(--text-primary); }
 
 .tool-card--video:hover  { border-color: #3b82f6; box-shadow: 0 0 30px rgba(59, 130, 246, 0.1); }
 .tool-card--audio:hover  { border-color: #8b5cf6; box-shadow: 0 0 30px rgba(139, 92, 246, 0.1); }
+.tool-card--stream:hover    { border-color: #f59e0b; box-shadow: 0 0 30px rgba(245, 158, 11, 0.1); }
 .tool-card--summarize:hover { border-color: #10b981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.1); }
 
 .tool-card__icon {
@@ -265,6 +266,7 @@ a:hover { color: var(--text-primary); }
 
 .tool-card--video .tool-card__icon     { color: #3b82f6; }
 .tool-card--audio .tool-card__icon     { color: #8b5cf6; }
+.tool-card--stream .tool-card__icon    { color: #f59e0b; }
 .tool-card--summarize .tool-card__icon { color: #10b981; }
 
 .tool-card__title {
@@ -330,6 +332,7 @@ a:hover { color: var(--text-primary); }
 
 .badge--videotr   { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
 .badge--audiotr   { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+.badge--streamtr  { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
 .badge--transtr   { background: rgba(16, 185, 129, 0.15); color: #34d399; }
 .badge--success   { background: rgba(16, 185, 129, 0.15); color: var(--color-success); }
 .badge--running   { background: rgba(59, 130, 246, 0.15); color: var(--color-primary); }
