@@ -68,6 +68,18 @@ class KeyStore:
                 masked[vendor] = "*" * len(key)
         return masked
 
+    def delete_key(self, vendor: str):
+        """Remove a single vendor's key from the store."""
+        data = self._load_store()
+        if vendor in data:
+            del data[vendor]
+            if data:
+                self._save_store(data)
+            else:
+                # No keys left — clean up the data file
+                if DATA_FILE.exists():
+                    DATA_FILE.unlink()
+
     def delete_all(self):
         """Remove all stored keys and the key file."""
         if DATA_FILE.exists():

@@ -70,3 +70,24 @@ async def settings_update(
         "stored_keys": keystore.masked_keys(),
         "saved": True,
     })
+
+
+@router.post("/keys/delete")
+async def delete_key(request: Request, vendor: str = Form("")):
+    keystore = request.app.state.keystore
+    templates = request.app.state.templates
+
+    if vendor == "__all__":
+        keystore.delete_all()
+        # Re-initialise so the keystore can generate a fresh key next time
+        keystore.__init__()
+    elif vendor:
+        keystore.delete_key(vendor)
+
+    keystore.apply_to_env()
+
+    return templates.TemplateResponse("partials/stored_keys.html", {
+        "request": request,
+        "stored_keys": keystore.masked_keys(),
+        "vendor_names": VENDOR_DISPLAY_NAMES,
+    })

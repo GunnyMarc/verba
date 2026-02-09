@@ -79,21 +79,39 @@
     <div class="card form-card">
         <h2 class="card-title">API Keys</h2>
 
-        {% if stored_keys %}
-        <div class="stored-keys-list">
-            <span class="form-label">Stored Keys</span>
-            {% for vendor, masked in stored_keys.items() %}
-            <div class="stored-key-row">
-                <span class="badge badge--key">{{ vendor_names.get(vendor, vendor) }}</span>
-                <code class="stored-key-value">{{ masked }}</code>
+        <div id="stored-keys-area">
+            {% if stored_keys %}
+            <div class="stored-keys-list">
+                <span class="form-label">Stored Keys</span>
+                {% for vendor, masked in stored_keys.items() %}
+                <div class="stored-key-row">
+                    <span class="badge badge--key">{{ vendor_names.get(vendor, vendor) }}</span>
+                    <code class="stored-key-value">{{ masked }}</code>
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
+            <div class="clear-keys-wrap">
+                <button type="button" class="btn btn--clear-keys"
+                        onclick="this.nextElementSibling.classList.toggle('clear-keys-menu--open'); this.classList.toggle('btn--clear-keys-active');">Clear Keys</button>
+                <div class="clear-keys-menu">
+                    {% for vendor in stored_keys %}
+                    <form hx-post="/settings/keys/delete" hx-target="#stored-keys-area" hx-swap="innerHTML">
+                        <input type="hidden" name="vendor" value="{{ vendor }}">
+                        <button type="submit" class="clear-keys-item">{{ vendor_names.get(vendor, vendor) }}</button>
+                    </form>
+                    {% endfor %}
+                    <form hx-post="/settings/keys/delete" hx-target="#stored-keys-area" hx-swap="innerHTML">
+                        <input type="hidden" name="vendor" value="__all__">
+                        <button type="submit" class="clear-keys-item clear-keys-item--all">Clear all keys</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="stored-keys-empty">
+                <span class="stored-keys-empty-text">No API Keys found</span>
+            </div>
+            {% endif %}
         </div>
-        {% else %}
-        <div class="stored-keys-empty">
-            <span class="stored-keys-empty-text">No API Keys found</span>
-        </div>
-        {% endif %}
 
         <div class="form-grid">
             <div class="form-row">
