@@ -16,6 +16,7 @@ if str(TRANSTR_DIR) not in sys.path:
 VIDEO_FORMATS = {".mov", ".mp4", ".mkv", ".mpeg", ".avi", ".webm"}
 AUDIO_FORMATS = {".mp3", ".wav", ".flac", ".m4a", ".ogg", ".aac", ".wma", ".opus", ".aiff", ".alac"}
 TRANSCRIPT_FORMATS = {".txt", ".md", ".csv", ".rtf", ".tsv"}
+INSTRUCTIONS_FORMATS = {".txt", ".csv", ".xlsx", ".doc", ".docx", ".md", ".pdf"}
 
 # Whisper configuration
 WHISPER_MODELS = ["tiny", "base", "small", "medium", "large"]

@@ -58,6 +58,14 @@
                       placeholder="Summarize the following transcript clearly and concisely.">Summarize the following transcript clearly and concisely.</textarea>
         </div>
 
+        <div class="form-row">
+            <label class="form-label" for="instructions_file">Input Instructions File</label>
+            <input type="file" id="instructions_file" name="instructions_file"
+                   accept=".txt,.csv,.xlsx,.doc,.docx,.md,.pdf"
+                   class="file-input">
+            <span class="form-hint">Supported: {{ instructions_formats }}. Overrides the instructions text above when provided.</span>
+        </div>
+
         <div class="form-actions">
             <button type="submit" class="btn btn--primary">
                 <span class="btn-text">Summarize</span>

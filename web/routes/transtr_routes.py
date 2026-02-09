@@ -5,7 +5,8 @@ from fastapi import APIRouter, Request, UploadFile, File, Form
 from sse_starlette.sse import EventSourceResponse
 
 from ..adapters.transtr_adapter import TranstrAdapter
-from ..config import TRANSCRIPT_FORMATS, AVAILABLE_MODELS, MODEL_DISPLAY_LABELS
+from ..config import TRANSCRIPT_FORMATS, INSTRUCTIONS_FORMATS, AVAILABLE_MODELS, MODEL_DISPLAY_LABELS
+from ..file_readers import read_instructions_file
 from ..jobs import JobStatus
 
 router = APIRouter()
@@ -22,6 +23,7 @@ async def transtr_form(request: Request):
         "available_models": AVAILABLE_MODELS,
         "model_labels": MODEL_DISPLAY_LABELS,
         "supported_formats": ", ".join(sorted(TRANSCRIPT_FORMATS)),
+        "instructions_formats": ", ".join(sorted(INSTRUCTIONS_FORMATS)),
     })
 
 
@@ -32,6 +34,7 @@ async def transtr_process(
     file: UploadFile = File(None),
     model: str = Form("llama3:latest"),
     instructions: str = Form(""),
+    instructions_file: UploadFile = File(None),
     batch_process: str = Form(""),
 ):
     templates = request.app.state.templates
@@ -44,7 +47,24 @@ async def transtr_process(
         "ollama_base_url": settings.ollama_base_url,
     }
 
-    default_instructions = instructions or "Summarize the following transcript clearly and concisely."
+    # Read instructions from uploaded file if provided
+    if instructions_file and instructions_file.filename:
+        ext = Path(instructions_file.filename).suffix.lower()
+        if ext not in INSTRUCTIONS_FORMATS:
+            return templates.TemplateResponse("partials/error.html", {
+                "request": request,
+                "error": f"Unsupported instructions format '{ext}'. Supported: {', '.join(sorted(INSTRUCTIONS_FORMATS))}",
+            })
+        try:
+            file_data = await instructions_file.read()
+            default_instructions = read_instructions_file(file_data, instructions_file.filename)
+        except Exception as e:
+            return templates.TemplateResponse("partials/error.html", {
+                "request": request,
+                "error": f"Failed to read instructions file: {e}",
+            })
+    else:
+        default_instructions = instructions or "Summarize the following transcript clearly and concisely."
 
     # Batch mode
     if batch_process == "on":
