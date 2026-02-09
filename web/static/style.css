@@ -888,6 +888,73 @@ a:hover { color: var(--text-primary); }
     font-family: var(--font-mono);
 }
 
+.install-warning {
+    margin-bottom: var(--space-md);
+    padding: var(--space-md);
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: var(--radius-sm);
+}
+
+.install-warning-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.install-warning-icon {
+    font-size: 1.1rem;
+    color: var(--color-error);
+}
+
+.install-warning-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-error);
+    letter-spacing: 0.03em;
+}
+
+.install-warning-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+}
+
+.install-warning-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.install-warning-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    min-width: 80px;
+}
+
+.install-warning-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+
+.install-warning-value--over {
+    color: var(--color-error);
+}
+
+.install-warning-text {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
 .install-prompt {
     color: var(--text-primary);
     font-size: 0.95rem;

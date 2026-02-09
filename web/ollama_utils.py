@@ -4,6 +4,7 @@ import subprocess
 import shutil
 import urllib.request
 import json
+import psutil
 from typing import Optional
 
 
@@ -67,6 +68,14 @@ def format_size(size_bytes: int) -> str:
     if size_bytes >= 1 << 10:
         return f"{size_bytes / (1 << 10):.1f} KB"
     return f"{size_bytes} B"
+
+
+def get_available_memory() -> Optional[int]:
+    """Return available system memory in bytes, or None on failure."""
+    try:
+        return psutil.virtual_memory().available
+    except Exception:
+        return None
 
 
 def pull_model(model: str, job) -> bool:

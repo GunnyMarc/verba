@@ -10,7 +10,10 @@ from ..adapters.transtr_adapter import TranstrAdapter
 from ..config import TRANSCRIPT_FORMATS, INSTRUCTIONS_FORMATS, AVAILABLE_MODELS, MODEL_DISPLAY_LABELS
 from ..file_readers import read_instructions_file
 from ..jobs import JobStatus
-from ..ollama_utils import is_ollama_available, is_model_installed, pull_model, get_model_download_size, format_size
+from ..ollama_utils import (
+    is_ollama_available, is_model_installed, pull_model,
+    get_model_download_size, get_available_memory, format_size,
+)
 
 router = APIRouter()
 
@@ -108,11 +111,22 @@ async def transtr_process(
         model_label = MODEL_DISPLAY_LABELS.get(model, model)
         size_bytes = get_model_download_size(model)
         download_size = format_size(size_bytes) if size_bytes else None
+        avail_bytes = get_available_memory()
+        available_memory = format_size(avail_bytes) if avail_bytes else None
+        exceeds_memory = (
+            size_bytes is not None
+            and avail_bytes is not None
+            and size_bytes > avail_bytes
+        )
+        required_memory = download_size  # same formatted value
         return templates.TemplateResponse("partials/install_confirm.html", {
             "request": request,
             "model": model,
             "model_label": model_label,
             "download_size": download_size,
+            "exceeds_memory": exceeds_memory,
+            "available_memory": available_memory,
+            "required_memory": required_memory,
         })
 
     job_settings = {

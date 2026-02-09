@@ -12,6 +12,27 @@
         <span class="install-size-value">{{ download_size }}</span>
     </div>
     {% endif %}
+    {% if exceeds_memory %}
+    <div class="install-warning">
+        <div class="install-warning-header">
+            <span class="install-warning-icon">&#x26A0;</span>
+            <span class="install-warning-title">WARNING: Insufficient Memory</span>
+        </div>
+        <div class="install-warning-details">
+            <div class="install-warning-row">
+                <span class="install-warning-label">Required:</span>
+                <span class="install-warning-value install-warning-value--over">{{ required_memory }}</span>
+            </div>
+            <div class="install-warning-row">
+                <span class="install-warning-label">Available:</span>
+                <span class="install-warning-value">{{ available_memory }}</span>
+            </div>
+        </div>
+        <p class="install-warning-text">
+            This model may exceed your available memory and could cause performance issues or fail to run.
+        </p>
+    </div>
+    {% endif %}
     <p class="install-prompt">Would you like to install it?</p>
     <div class="install-actions">
         <form hx-post="/transtr/install" hx-target="#result-area" hx-swap="innerHTML">
