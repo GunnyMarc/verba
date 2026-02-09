@@ -6,32 +6,19 @@
     <p class="install-text">
         The model <strong>{{ model_label }}</strong> (<code>{{ model }}</code>) is not installed locally.
     </p>
+    {% if download_size %}
+    <div class="install-size">
+        <span class="install-size-label">Download size:</span>
+        <span class="install-size-value">{{ download_size }}</span>
+    </div>
+    {% endif %}
     <p class="install-prompt">Would you like to install it?</p>
     <div class="install-actions">
         <form hx-post="/transtr/install" hx-target="#result-area" hx-swap="innerHTML">
             <input type="hidden" name="model" value="{{ model }}">
-            <button type="submit" class="btn btn--yes">Y</button>
+            <button type="submit" class="btn btn--yes">Yes</button>
         </form>
         <button type="button" class="btn btn--no"
-                onclick="this.closest('.install-card').remove()">N</button>
+                onclick="this.closest('.install-card').remove()">No</button>
     </div>
 </div>
-<script>
-(function() {
-    var card = document.currentScript.previousElementSibling;
-    document.addEventListener('keydown', function handler(e) {
-        if (!document.body.contains(card)) {
-            document.removeEventListener('keydown', handler);
-            return;
-        }
-        var key = e.key.toLowerCase();
-        if (key === 'y') {
-            card.querySelector('.btn--yes').click();
-            document.removeEventListener('keydown', handler);
-        } else if (key === 'n') {
-            card.querySelector('.btn--no').click();
-            document.removeEventListener('keydown', handler);
-        }
-    });
-})();
-</script>

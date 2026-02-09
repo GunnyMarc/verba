@@ -10,7 +10,7 @@ from ..adapters.transtr_adapter import TranstrAdapter
 from ..config import TRANSCRIPT_FORMATS, INSTRUCTIONS_FORMATS, AVAILABLE_MODELS, MODEL_DISPLAY_LABELS
 from ..file_readers import read_instructions_file
 from ..jobs import JobStatus
-from ..ollama_utils import is_ollama_available, is_model_installed, pull_model
+from ..ollama_utils import is_ollama_available, is_model_installed, pull_model, get_model_download_size, format_size
 
 router = APIRouter()
 
@@ -106,10 +106,13 @@ async def transtr_process(
     # Check if local Ollama model is installed
     if not is_cloud_model(model) and is_ollama_available() and not is_model_installed(model):
         model_label = MODEL_DISPLAY_LABELS.get(model, model)
+        size_bytes = get_model_download_size(model)
+        download_size = format_size(size_bytes) if size_bytes else None
         return templates.TemplateResponse("partials/install_confirm.html", {
             "request": request,
             "model": model,
             "model_label": model_label,
+            "download_size": download_size,
         })
 
     job_settings = {

@@ -861,6 +861,33 @@ a:hover { color: var(--text-primary); }
     color: var(--color-primary);
 }
 
+.install-size {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    width: fit-content;
+}
+
+.install-size-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.install-size-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    font-family: var(--font-mono);
+}
+
 .install-prompt {
     color: var(--text-primary);
     font-size: 0.95rem;

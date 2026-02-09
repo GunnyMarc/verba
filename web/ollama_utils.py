@@ -2,6 +2,9 @@
 
 import subprocess
 import shutil
+import urllib.request
+import json
+from typing import Optional
 
 
 def is_ollama_available() -> bool:
@@ -27,6 +30,43 @@ def get_installed_models() -> set[str]:
 def is_model_installed(model: str) -> bool:
     """Check if a specific Ollama model is installed."""
     return model in get_installed_models()
+
+
+def get_model_download_size(model: str) -> Optional[int]:
+    """Query the Ollama registry for the total download size of a model in bytes.
+
+    Returns None if the size cannot be determined.
+    """
+    # Split "name:tag" — default tag is "latest"
+    if ":" in model:
+        name, tag = model.rsplit(":", 1)
+    else:
+        name, tag = model, "latest"
+
+    url = f"https://registry.ollama.ai/v2/library/{name}/manifests/{tag}"
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            manifest = json.loads(resp.read())
+        total = 0
+        for layer in manifest.get("layers", []):
+            total += layer.get("size", 0)
+        config_size = manifest.get("config", {}).get("size", 0)
+        total += config_size
+        return total if total > 0 else None
+    except Exception:
+        return None
+
+
+def format_size(size_bytes: int) -> str:
+    """Format byte count into a human-readable string."""
+    if size_bytes >= 1 << 30:
+        return f"{size_bytes / (1 << 30):.1f} GB"
+    if size_bytes >= 1 << 20:
+        return f"{size_bytes / (1 << 20):.1f} MB"
+    if size_bytes >= 1 << 10:
+        return f"{size_bytes / (1 << 10):.1f} KB"
+    return f"{size_bytes} B"
 
 
 def pull_model(model: str, job) -> bool:
