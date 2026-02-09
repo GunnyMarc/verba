@@ -91,11 +91,14 @@ async def transtr_process(
     instructions_file: UploadFile = File(None),
     batch_process: str = Form(""),
     input_dir: str = Form(""),
+    output_dir: str = Form(""),
 ):
     templates = request.app.state.templates
     settings = request.app.state.settings
     job_manager = request.app.state.job_manager
     executor = request.app.state.executor
+    resolved_output = Path(output_dir) if output_dir else Path(settings.summary_output_dir)
+    resolved_output.mkdir(parents=True, exist_ok=True)
 
     job_settings = {
         "model": model,
@@ -138,7 +141,7 @@ async def transtr_process(
                 "error": f"No transcript files found in {resolved_input} directory.",
             })
         job = job_manager.create_job("transtr", f"Batch ({len(texts)} files)", job_settings)
-        executor.submit(TranstrAdapter.run_batch, job, texts, default_instructions, job_settings)
+        executor.submit(TranstrAdapter.run_batch, job, texts, default_instructions, job_settings, str(resolved_output))
         return templates.TemplateResponse("partials/progress.html", {
             "request": request,
             "job_id": job.id,
@@ -167,7 +170,7 @@ async def transtr_process(
         })
 
     job = job_manager.create_job("transtr", filename, job_settings)
-    executor.submit(TranstrAdapter.run, job, input_text, default_instructions, job_settings)
+    executor.submit(TranstrAdapter.run, job, input_text, default_instructions, job_settings, str(resolved_output), filename)
 
     return templates.TemplateResponse("partials/progress.html", {
         "request": request,

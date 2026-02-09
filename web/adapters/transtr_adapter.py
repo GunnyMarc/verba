@@ -9,7 +9,7 @@ from .base import make_progress_callback
 class TranstrAdapter:
 
     @staticmethod
-    def run(job, text: str, instructions: str, settings: dict) -> dict:
+    def run(job, text: str, instructions: str, settings: dict, output_dir: str = "", filename: str = "") -> dict:
         job.start()
         callback = make_progress_callback(job)
         try:
@@ -40,12 +40,20 @@ class TranstrAdapter:
 
             callback(90, "Finalizing...")
 
+            # Write summary to output file
+            output_path = None
+            if output_dir:
+                stem = Path(filename).stem if filename and filename != "direct input" else "summary"
+                output_path = Path(output_dir) / f"{stem}_summary.md"
+                output_path.write_text(summary, encoding="utf-8")
+
             job.complete({
                 "type": "single",
                 "summary": summary,
                 "model_used": model,
                 "input_length": len(text),
                 "output_length": len(summary),
+                "output_path": str(output_path) if output_path else "",
             })
 
         except Exception as e:
@@ -54,7 +62,7 @@ class TranstrAdapter:
         return job.to_dict()
 
     @staticmethod
-    def run_batch(job, texts: list[dict], instructions: str, settings: dict) -> dict:
+    def run_batch(job, texts: list[dict], instructions: str, settings: dict, output_dir: str = "") -> dict:
         """texts is a list of dicts: [{"filename": str, "text": str}, ...]"""
         job.start()
         total = len(texts)
@@ -79,6 +87,13 @@ class TranstrAdapter:
                     model=model,
                     base_url=base_url,
                 )
+
+                # Write summary to output file
+                if output_dir:
+                    stem = Path(item["filename"]).stem
+                    output_path = Path(output_dir) / f"{stem}_summary.md"
+                    output_path.write_text(summary, encoding="utf-8")
+
                 success_count += 1
                 results.append({
                     "file": item["filename"],
