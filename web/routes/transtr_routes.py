@@ -27,6 +27,60 @@ async def transtr_form(request: Request):
     })
 
 
+@router.get("/browse")
+async def browse_directories(request: Request, path: str = "", target: str = ""):
+    templates = request.app.state.templates
+
+    browse_path = Path(path) if path else Path.home()
+    if not browse_path.is_dir():
+        browse_path = browse_path.parent if browse_path.parent.is_dir() else Path.home()
+
+    dirs = []
+    try:
+        for entry in sorted(browse_path.iterdir()):
+            if entry.is_dir():
+                dirs.append(entry.name)
+    except PermissionError:
+        pass
+
+    return templates.TemplateResponse("partials/browse.html", {
+        "request": request,
+        "current_path": str(browse_path),
+        "parent_path": str(browse_path.parent),
+        "dirs": dirs,
+        "target": target,
+        "browse_url": "/transtr/browse",
+    })
+
+
+@router.post("/browse/mkdir")
+async def browse_mkdir(request: Request, path: str = Form(""), name: str = Form(""), target: str = Form("")):
+    templates = request.app.state.templates
+
+    parent = Path(path) if path else Path.home()
+    if name:
+        new_dir = parent / name
+        new_dir.mkdir(parents=True, exist_ok=True)
+
+    browse_path = new_dir if name and new_dir.is_dir() else parent
+    dirs = []
+    try:
+        for entry in sorted(browse_path.iterdir()):
+            if entry.is_dir():
+                dirs.append(entry.name)
+    except PermissionError:
+        pass
+
+    return templates.TemplateResponse("partials/browse.html", {
+        "request": request,
+        "current_path": str(browse_path),
+        "parent_path": str(browse_path.parent),
+        "dirs": dirs,
+        "target": target,
+        "browse_url": "/transtr/browse",
+    })
+
+
 @router.post("/process")
 async def transtr_process(
     request: Request,
@@ -36,6 +90,7 @@ async def transtr_process(
     instructions: str = Form(""),
     instructions_file: UploadFile = File(None),
     batch_process: str = Form(""),
+    input_dir: str = Form(""),
 ):
     templates = request.app.state.templates
     settings = request.app.state.settings
@@ -68,9 +123,9 @@ async def transtr_process(
 
     # Batch mode
     if batch_process == "on":
-        input_dir = Path(settings.summary_input_dir)
+        resolved_input = Path(input_dir) if input_dir else Path(settings.summary_input_dir)
         texts = []
-        for f in sorted(input_dir.iterdir()):
+        for f in sorted(resolved_input.iterdir()):
             if f.is_file() and f.suffix.lower() in TRANSCRIPT_FORMATS:
                 try:
                     content = f.read_text(encoding="utf-8")
@@ -80,7 +135,7 @@ async def transtr_process(
         if not texts:
             return templates.TemplateResponse("partials/error.html", {
                 "request": request,
-                "error": "No transcript files found in transtr/input/ directory.",
+                "error": f"No transcript files found in {resolved_input} directory.",
             })
         job = job_manager.create_job("transtr", f"Batch ({len(texts)} files)", job_settings)
         executor.submit(TranstrAdapter.run_batch, job, texts, default_instructions, job_settings)

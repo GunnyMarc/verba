@@ -17,9 +17,9 @@
         <div class="form-row">
             <label class="toggle-label">
                 <input type="checkbox" name="batch_process" value="on"
-                       onchange="document.getElementById('text-input-group').style.display = this.checked ? 'none' : 'block'; document.getElementById('file-input-group').style.display = this.checked ? 'none' : 'block'">
+                       onchange="document.getElementById('text-input-group').style.display = this.checked ? 'none' : 'block'; document.getElementById('file-input-group').style.display = this.checked ? 'none' : 'block'; document.getElementById('batch-input-group').style.display = this.checked ? 'block' : 'none'">
                 <span class="toggle-text">Batch Process</span>
-                <span class="toggle-hint">Process all files in transtr/input/</span>
+                <span class="toggle-hint">Process all transcript files in a directory</span>
             </label>
         </div>
 
@@ -35,6 +35,19 @@
                    accept=".txt,.md,.csv,.rtf,.tsv"
                    class="file-input">
             <span class="form-hint">Supported: {{ supported_formats }}</span>
+        </div>
+
+        <div id="batch-input-group" class="form-row" style="display:none">
+            <label class="form-label" for="input_dir">Transcript Input Directory</label>
+            <div class="input-with-browse">
+                <input type="text" id="input_dir" name="input_dir"
+                       value="{{ settings.summary_input_dir }}"
+                       class="form-input">
+                <button type="button" class="btn btn--browse"
+                        onclick="document.getElementById('browse-modal').style.display='flex'; htmx.ajax('GET', '/transtr/browse?path=' + encodeURIComponent(document.getElementById('input_dir').value) + '&target=input_dir', '#browse-modal-content')">
+                    Browse
+                </button>
+            </div>
         </div>
 
         <div class="form-grid">
@@ -76,4 +89,8 @@
 </div>
 
 <div id="result-area"></div>
+
+<div id="browse-modal" class="browse-modal" style="display:none">
+    <div class="browse-modal-dialog" id="browse-modal-content"></div>
+</div>
 {% endblock %}
