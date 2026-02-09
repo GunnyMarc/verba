@@ -18,7 +18,7 @@ class TranstrAdapter:
 
             # Check API key availability for cloud models
             from web.config import is_openai_model, is_google_model
-            from transtr.config_manager import is_circuit_model
+            from transtr.config_manager import is_anthropic_model, is_circuit_model
 
             if is_openai_model(model) and not os.environ.get("OPENAI_API_KEY"):
                 job.fail("OpenAI API key is not configured. Please add it in Settings.")
@@ -26,6 +26,10 @@ class TranstrAdapter:
 
             if is_google_model(model) and not os.environ.get("GOOGLE_API_KEY"):
                 job.fail("Google API key is not configured. Please add it in Settings.")
+                return job.to_dict()
+
+            if is_anthropic_model(model) and not os.environ.get("ANTHROPIC_API_KEY"):
+                job.fail("Anthropic API key is not configured. Please add it in Settings.")
                 return job.to_dict()
 
             if is_circuit_model(model) and not os.environ.get("CIRCUIT_API_KEY"):

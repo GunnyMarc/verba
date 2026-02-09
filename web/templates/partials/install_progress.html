@@ -1,0 +1,25 @@
+<div class="card progress-container"
+     hx-ext="sse"
+     sse-connect="/transtr/jobs/{{ job_id }}/stream"
+     sse-close="complete">
+
+    <div class="progress-header">
+        <span class="progress-title">Installing {{ model }}...</span>
+        <span class="progress-id">Job {{ job_id }}</span>
+    </div>
+
+    <div sse-swap="progress">
+        <div class="progress-track">
+            <div class="progress-bar" style="width: 0%">
+                <span class="progress-pct">0%</span>
+            </div>
+        </div>
+        <div class="progress-message">Starting download...</div>
+    </div>
+
+    <div hx-trigger="sse:complete"
+         hx-get="/transtr/install/{{ job_id }}/result"
+         hx-target="closest .progress-container"
+         hx-swap="outerHTML">
+    </div>
+</div>

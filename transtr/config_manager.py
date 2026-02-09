@@ -26,6 +26,11 @@ AVAILABLE_MODELS = {
         "gemini-1.5-flash",
         "gemini-1.5-pro",
     ],
+    "Anthropic (Commercial)": [
+        "claude-opus-4-6",
+        "claude-sonnet-4-5-20250929",
+        "claude-haiku-4-5-20251001",
+    ],
     "Circuit (Cisco-only)": [
         "circuit-internal",
         "circuit-anthropic",
@@ -49,6 +54,9 @@ MODEL_DISPLAY_LABELS = {
     "gpt-4o-mini": "OpenAI GPT-4o-mini (Commercial/$$$)",
     "gemini-1.5-flash": "Google Gemini 1.5 Flash (Commercial/$$$)",
     "gemini-1.5-pro": "Google Gemini 1.5 Pro (Commercial/$$$)",
+    "claude-opus-4-6": "Anthropic-Opus 4.6 (Commercial/$$$)",
+    "claude-sonnet-4-5-20250929": "Anthropic-Sonnet 4.5 (Commercial/$$$)",
+    "claude-haiku-4-5-20251001": "Anthropic-Haiku 4.5 (Commercial/$$$)",
     "circuit-internal": "Circuit-Internal Cisco Data (Cisco-only)",
     "circuit-anthropic": "Circuit-Anthropic (Cisco-only)",
     "circuit-openai": "Circuit-OpenAI (Cisco-only)",
@@ -65,6 +73,12 @@ GOOGLE_MODELS = {
     "gemini-1.5-pro",
 }
 
+ANTHROPIC_MODELS = {
+    "claude-opus-4-6",
+    "claude-sonnet-4-5-20250929",
+    "claude-haiku-4-5-20251001",
+}
+
 CIRCUIT_MODELS = {
     "circuit-internal",
     "circuit-anthropic",
@@ -72,7 +86,7 @@ CIRCUIT_MODELS = {
     "circuit-google",
 }
 
-COMMERCIAL_MODELS = OPENAI_MODELS | GOOGLE_MODELS | CIRCUIT_MODELS
+COMMERCIAL_MODELS = OPENAI_MODELS | GOOGLE_MODELS | ANTHROPIC_MODELS | CIRCUIT_MODELS
 
 
 def get_conf_paths(base_dir: str) -> tuple[str, str]:
@@ -121,6 +135,11 @@ def is_openai_model(model: str) -> bool:
 def is_google_model(model: str) -> bool:
     """Return True if the model is a Google Gemini model."""
     return model in GOOGLE_MODELS
+
+
+def is_anthropic_model(model: str) -> bool:
+    """Return True if the model is an Anthropic model."""
+    return model in ANTHROPIC_MODELS
 
 
 def is_circuit_model(model: str) -> bool:

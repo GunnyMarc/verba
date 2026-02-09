@@ -2,12 +2,15 @@ import asyncio
 from pathlib import Path
 
 from fastapi import APIRouter, Request, UploadFile, File, Form
+from fastapi.responses import JSONResponse
 from sse_starlette.sse import EventSourceResponse
 
+from transtr.config_manager import is_cloud_model
 from ..adapters.transtr_adapter import TranstrAdapter
 from ..config import TRANSCRIPT_FORMATS, INSTRUCTIONS_FORMATS, AVAILABLE_MODELS, MODEL_DISPLAY_LABELS
 from ..file_readers import read_instructions_file
 from ..jobs import JobStatus
+from ..ollama_utils import is_ollama_available, is_model_installed, pull_model
 
 router = APIRouter()
 
@@ -99,6 +102,15 @@ async def transtr_process(
     executor = request.app.state.executor
     resolved_output = Path(output_dir) if output_dir else Path(settings.summary_output_dir)
     resolved_output.mkdir(parents=True, exist_ok=True)
+
+    # Check if local Ollama model is installed
+    if not is_cloud_model(model) and is_ollama_available() and not is_model_installed(model):
+        model_label = MODEL_DISPLAY_LABELS.get(model, model)
+        return templates.TemplateResponse("partials/install_confirm.html", {
+            "request": request,
+            "model": model,
+            "model_label": model_label,
+        })
 
     job_settings = {
         "model": model,
@@ -224,3 +236,71 @@ async def transtr_result(request: Request, job_id: str):
         "job": job.to_dict(),
         "tool": "transtr",
     })
+
+
+def _run_install(job, model: str):
+    """Background task: pull an Ollama model."""
+    job.start()
+    job.update_progress(10, f"Pulling {model}...")
+    success = pull_model(model, job)
+    if success:
+        job.complete({"model": model})
+    elif job.status.value != "failed":
+        job.fail(f"Failed to pull model '{model}'.")
+
+
+@router.post("/install")
+async def install_model(request: Request, model: str = Form("")):
+    templates = request.app.state.templates
+    job_manager = request.app.state.job_manager
+    executor = request.app.state.executor
+
+    if not model:
+        return templates.TemplateResponse("partials/error.html", {
+            "request": request,
+            "error": "No model specified.",
+        })
+
+    job = job_manager.create_job("install", model, {"model": model})
+    executor.submit(_run_install, job, model)
+
+    return templates.TemplateResponse("partials/install_progress.html", {
+        "request": request,
+        "job_id": job.id,
+        "model": model,
+    })
+
+
+@router.get("/install/{job_id}/result")
+async def install_result(request: Request, job_id: str):
+    templates = request.app.state.templates
+    job_manager = request.app.state.job_manager
+    job = job_manager.get_job(job_id)
+
+    if not job:
+        return templates.TemplateResponse("partials/error.html", {
+            "request": request,
+            "error": "Install job not found.",
+        })
+
+    job_data = job.to_dict()
+    if job_data["status"] == "completed":
+        return templates.TemplateResponse("partials/install_result.html", {
+            "request": request,
+            "success": True,
+            "model": job_data["settings"].get("model", ""),
+        })
+    else:
+        return templates.TemplateResponse("partials/install_result.html", {
+            "request": request,
+            "success": False,
+            "error": job_data.get("error", "Unknown error during installation."),
+        })
+
+
+@router.post("/restart")
+async def restart_server():
+    """Touch app.py to trigger uvicorn reload."""
+    app_file = Path(__file__).resolve().parent.parent / "app.py"
+    app_file.touch()
+    return JSONResponse({"status": "restarting"})

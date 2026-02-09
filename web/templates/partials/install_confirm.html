@@ -1,0 +1,16 @@
+<div class="card install-card">
+    <div class="install-header">
+        <span class="install-icon">&#x2B07;</span>
+        <span class="install-title">Model Not Installed</span>
+    </div>
+    <p class="install-text">
+        The model <strong>{{ model_label }}</strong> (<code>{{ model }}</code>) is not installed locally.
+    </p>
+    <div class="install-actions">
+        <form hx-post="/transtr/install" hx-target="#result-area" hx-swap="innerHTML">
+            <input type="hidden" name="model" value="{{ model }}">
+            <button type="submit" class="btn btn--primary">Install Model</button>
+        </form>
+        <button type="button" class="btn btn--cancel" onclick="this.closest('.install-card').remove()">Cancel</button>
+    </div>
+</div>

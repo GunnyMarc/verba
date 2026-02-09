@@ -818,6 +818,74 @@ a:hover { color: var(--text-primary); }
     color: var(--color-error);
 }
 
+/* ---- Install Card ---- */
+.install-card {
+    border-color: var(--color-warning);
+    box-shadow: 0 0 20px var(--color-warning-glow);
+}
+
+.install-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.install-icon {
+    font-size: 1.2rem;
+    color: var(--color-warning);
+}
+
+.install-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-warning);
+}
+
+.install-text {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: var(--space-md);
+}
+
+.install-text code {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--color-primary);
+}
+
+.install-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+}
+
+.btn--cancel {
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    color: var(--text-secondary);
+    padding: var(--space-sm) var(--space-xl);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    letter-spacing: 0.02em;
+}
+
+.btn--cancel:hover {
+    border-color: var(--color-error);
+    color: var(--color-error);
+}
+
 /* ---- Error Card ---- */
 .error-card {
     border-color: var(--color-error);

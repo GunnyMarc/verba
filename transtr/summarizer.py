@@ -1,9 +1,9 @@
-"""Summarize video transcription using Ollama, OpenAI, Google Gemini, or Circuit."""
+"""Summarize video transcription using Ollama, OpenAI, Google Gemini, Anthropic, or Circuit."""
 
 import os
 import requests
 
-from .config_manager import is_circuit_model, is_google_model, is_openai_model
+from .config_manager import is_anthropic_model, is_circuit_model, is_google_model, is_openai_model
 
 
 # Circuit model-name mapping to the actual model identifier on the Circuit API
@@ -32,6 +32,8 @@ def summarize(transcript_text: str, instructions: str, model: str, base_url: str
     """
     if is_circuit_model(model):
         return _summarize_circuit(transcript_text, instructions, model)
+    if is_anthropic_model(model):
+        return _summarize_anthropic(transcript_text, instructions, model)
     if is_openai_model(model):
         return _summarize_openai(transcript_text, instructions, model)
     if is_google_model(model):
@@ -69,6 +71,21 @@ def _summarize_openai(transcript_text: str, instructions: str, model: str) -> st
         max_tokens=4096,
     )
     return response.choices[0].message.content
+
+
+def _summarize_anthropic(transcript_text: str, instructions: str, model: str) -> str:
+    import anthropic
+
+    client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from env
+    response = client.messages.create(
+        model=model,
+        system=instructions,
+        messages=[
+            {"role": "user", "content": transcript_text},
+        ],
+        max_tokens=4096,
+    )
+    return response.content[0].text
 
 
 def _summarize_google(transcript_text: str, instructions: str, model: str) -> str:
