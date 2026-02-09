@@ -26,6 +26,12 @@ AVAILABLE_MODELS = {
         "gemini-1.5-flash",
         "gemini-1.5-pro",
     ],
+    "Circuit (Cisco-only)": [
+        "circuit-internal",
+        "circuit-anthropic",
+        "circuit-openai",
+        "circuit-google",
+    ],
 }
 
 # Display labels for the model selection menu
@@ -43,6 +49,10 @@ MODEL_DISPLAY_LABELS = {
     "gpt-4o-mini": "OpenAI GPT-4o-mini (Commercial/$$$)",
     "gemini-1.5-flash": "Google Gemini 1.5 Flash (Commercial/$$$)",
     "gemini-1.5-pro": "Google Gemini 1.5 Pro (Commercial/$$$)",
+    "circuit-internal": "Circuit-Internal Cisco Data (Cisco-only)",
+    "circuit-anthropic": "Circuit-Anthropic (Cisco-only)",
+    "circuit-openai": "Circuit-OpenAI (Cisco-only)",
+    "circuit-google": "Circuit-Google (Cisco-only)",
 }
 
 OPENAI_MODELS = {
@@ -55,7 +65,14 @@ GOOGLE_MODELS = {
     "gemini-1.5-pro",
 }
 
-COMMERCIAL_MODELS = OPENAI_MODELS | GOOGLE_MODELS
+CIRCUIT_MODELS = {
+    "circuit-internal",
+    "circuit-anthropic",
+    "circuit-openai",
+    "circuit-google",
+}
+
+COMMERCIAL_MODELS = OPENAI_MODELS | GOOGLE_MODELS | CIRCUIT_MODELS
 
 
 def get_conf_paths(base_dir: str) -> tuple[str, str]:
@@ -104,6 +121,11 @@ def is_openai_model(model: str) -> bool:
 def is_google_model(model: str) -> bool:
     """Return True if the model is a Google Gemini model."""
     return model in GOOGLE_MODELS
+
+
+def is_circuit_model(model: str) -> bool:
+    """Return True if the model is a Circuit (Cisco) model."""
+    return model in CIRCUIT_MODELS
 
 
 def is_cloud_model(model: str) -> bool:
