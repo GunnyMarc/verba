@@ -19,6 +19,30 @@ Browser (HTMX) <──SSE/HTML──> FastAPI (Uvicorn/HTTPS) ──> Adapters �
                    └── auto-generates self-signed TLS cert on first run
 ```
 
+### Processing Flow
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌───────────────────┐     ┌────────────────┐
+│  Browser    │     │  FastAPI Route    │     │  Adapter          │     │  Pipeline      │
+│  (HTMX)    │────>│  (upload/process) │────>│  (run/run_batch)  │────>│  (videotr/     │
+│             │     │                  │     │                   │     │   audiotr/     │
+│  SSE ◄──────│◄────│  SSE Stream      │◄────│  progress_callback│◄────│   transtr)     │
+│  progress   │     │  (0.5s poll)     │     │                   │     │                │
+└─────────────┘     └──────────────────┘     └───────────────────┘     └────────────────┘
+                            │
+                    ┌───────┴────────┐
+                    │  ThreadPool    │
+                    │  Executor      │
+                    │  (3 workers)   │
+                    └────────────────┘
+```
+
+1. User submits a file or text via an HTMX form
+2. The route handler saves the upload, creates a `Job`, and submits work to a `ThreadPoolExecutor` (3 workers)
+3. The appropriate **Adapter** calls the pipeline and updates job progress via callbacks
+4. The browser receives real-time progress via **Server-Sent Events** (SSE) rendered as HTML partials
+5. On completion, the result partial replaces the progress card with output preview and download link
+
 ### Core Components
 
 | Component | File | Purpose |
@@ -28,6 +52,7 @@ Browser (HTMX) <──SSE/HTML──> FastAPI (Uvicorn/HTTPS) ──> Adapters �
 | **Config** | `web/config.py` | Supported file formats, Whisper model/device choices, LLM model definitions, API key vendor mapping, and the `WebSettings` class |
 | **Job Manager** | `web/jobs.py` | Thread-safe `Job` and `JobManager` classes for creating, tracking, and querying processing jobs with progress callbacks |
 | **KeyStore** | `web/keystore.py` | Fernet-encrypted on-disk storage for API keys (`.verba.key` + `.verba_keys.dat`), with `apply_to_env()` to inject keys into environment variables |
+| **File Readers** | `web/file_readers.py` | Reads instruction files in multiple formats (`.txt`, `.csv`, `.xlsx`, `.doc`, `.docx`, `.md`, `.pdf`) for the Summarize tool |
 | **Entry Point** | `web/run.py` | Launches Uvicorn over HTTPS on `localhost:30319` with hot-reload; auto-generates a self-signed TLS certificate via the `cryptography` library if none exists |
 
 ### Processing Pipelines
@@ -38,25 +63,9 @@ The processing pipelines are bundled as sibling packages at the repository root:
 |---------|---------|
 | `videotr/` | Video-to-text transcription — extracts audio from video files, transcribes via Whisper, and formats as markdown |
 | `audiotr/` | Audio-to-text transcription — processes audio files directly via Whisper and formats as markdown |
-| `transtr/` | Transcript summarization — sends text to LLMs (Ollama, OpenAI, or Google Gemini) with configurable instructions |
+| `transtr/` | Transcript summarization — sends text to LLMs (Ollama, OpenAI, Google Gemini, or Circuit) with configurable instructions |
 
 Each pipeline is called by a corresponding **Adapter** in `web/adapters/` that provides a uniform `run()` / `run_batch()` interface with real-time progress tracking.
-
-### Processing Flow
-
-1. User submits a file or text via an HTMX form
-2. The route handler saves the upload, creates a `Job`, and submits work to a `ThreadPoolExecutor` (3 workers)
-3. The appropriate **Adapter** calls the pipeline and updates job progress via callbacks
-4. The browser receives real-time progress via **Server-Sent Events** (SSE) rendered as HTML partials
-5. On completion, the result partial replaces the progress card with output preview and download link
-
-### Progress Tracking
-
-Progress is tracked end-to-end from the pipeline to the browser:
-
-- **Single file mode**: The pipeline reports granular progress (validating → extracting audio → loading model → transcribing → formatting → saving) with percentage updates at each stage
-- **Batch mode**: Overall progress is divided across files, with per-file pipeline progress mapped into the batch's percentage range (e.g., file 3 of 5 at 50% transcription = 50% overall)
-- **SSE delivery**: The server polls the job every 0.5 seconds and streams HTML progress bar updates to the browser via HTMX's SSE extension
 
 ### Adapters
 
@@ -66,24 +75,30 @@ Adapters wrap the sibling pipeline packages and expose a uniform interface:
 |---------|-----------------|----------|
 | `VideotrAdapter` | `videotr.src.pipeline` | Video-to-text transcription via Whisper |
 | `AudiotrAdapter` | `audiotr.src.pipeline` | Audio-to-text transcription via Whisper |
-| `TranstrAdapter` | `transtr.summarizer` | Transcript summarization via LLMs (Ollama, OpenAI, Google) |
+| `TranstrAdapter` | `transtr.summarizer` | Transcript summarization via LLMs (Ollama, OpenAI, Google, Circuit) |
 
 ### Routes
 
 | Prefix | Module | Endpoints |
 |--------|--------|-----------|
 | `/` | `routes/dashboard.py` | Dashboard with tool cards and recent jobs |
-| `/videotr` | `routes/videotr_routes.py` | Form, upload, SSE stream, result, download |
-| `/audiotr` | `routes/audiotr_routes.py` | Form, upload, SSE stream, result, download |
-| `/transtr` | `routes/transtr_routes.py` | Form, process (text or file), SSE stream, result |
-| `/settings` | `routes/settings_routes.py` | Global settings, API key management, directory browser |
+| `/videotr` | `routes/videotr_routes.py` | Form, upload, browse, SSE stream, result, download |
+| `/audiotr` | `routes/audiotr_routes.py` | Form, upload, browse, SSE stream, result, download |
+| `/transtr` | `routes/transtr_routes.py` | Form, process (text or file), browse, SSE stream, result |
+| `/settings` | `routes/settings_routes.py` | Global settings, API key management |
 
 ### Frontend
 
 - **HTMX** handles form submissions, SSE subscriptions, and partial HTML swaps (no custom JavaScript framework)
 - **Jinja2** templates with a shared `base.html` layout (nav bar, main content area, footer)
-- **Partials** (`progress.html`, `progress_bar.html`, `result.html`, `error.html`, `browse.html`) are returned as HTML fragments for in-page updates
+- **Partials** (`progress.html`, `videotr_progress.html`, `progress_bar.html`, `result.html`, `error.html`, `browse.html`) are returned as HTML fragments for in-page updates
 - Dark-themed UI styled via `static/style.css` with CSS custom properties
+
+### Progress Tracking
+
+- **Single file mode**: The pipeline reports granular progress (validating, extracting audio, loading model, transcribing, formatting, saving) with percentage updates at each stage
+- **Batch mode**: Overall progress is divided across files, with per-file pipeline progress mapped into the batch's percentage range
+- **SSE delivery**: The server polls the job every 0.5 seconds and streams HTML progress bar updates to the browser via HTMX's SSE extension
 
 ## File Structure
 
@@ -94,6 +109,7 @@ verba/
 ├── verba.sh                    # Startup script (start/stop/status/log/clear-cache)
 │
 ├── videotr/                    # Video transcription pipeline
+│   ├── README.md
 │   ├── __init__.py
 │   ├── input/                  # Default batch input directory
 │   └── src/
@@ -102,10 +118,11 @@ verba/
 │       ├── extractor.py        # AudioExtractor (video → audio via FFmpeg)
 │       ├── transcriber.py      # Transcriber (audio → text via Whisper)
 │       ├── formatter.py        # MarkdownFormatter (text → styled markdown)
-│       ├── config.py           # Pipeline configuration
-│       └── cli.py              # CLI entry point
+│       ├── config.py           # Pipeline configuration and FFmpeg checks
+│       └── cli.py              # CLI entry point (Click-based)
 │
 ├── audiotr/                    # Audio transcription pipeline
+│   ├── README.md
 │   ├── __init__.py
 │   ├── input/                  # Default batch input directory
 │   └── src/
@@ -114,23 +131,26 @@ verba/
 │       ├── processor.py        # AudioProcessor (format conversion via FFmpeg)
 │       ├── transcriber.py      # Transcriber (audio → text via Whisper)
 │       ├── formatter.py        # MarkdownFormatter (text → styled markdown)
-│       ├── config.py           # Pipeline configuration
-│       └── cli.py              # CLI entry point
+│       ├── config.py           # Pipeline configuration and FFmpeg checks
+│       └── cli.py              # CLI entry point (Click-based)
 │
 ├── transtr/                    # Transcript summarization
+│   ├── README.md
 │   ├── __init__.py
 │   ├── input/                  # Default batch input directory
-│   ├── summarizer.py           # summarize() — routes to Ollama, OpenAI, or Google
-│   ├── config_manager.py       # Model definitions, vendor detection
-│   ├── system_checks.py        # Runtime environment checks
-│   └── conf/                   # Configuration files
+│   ├── summarizer.py           # summarize() — routes to Ollama, OpenAI, Google, or Circuit
+│   ├── config_manager.py       # Model definitions, vendor detection, configuration
+│   ├── system_checks.py        # Runtime environment checks (OS, Python, model install)
+│   └── conf/                   # Configuration files (transtr.conf)
 │
 └── web/                        # FastAPI web application
+    ├── README.md
     ├── __init__.py
     ├── app.py                  # FastAPI app factory & lifespan
     ├── config.py               # Settings, format constants, model defs
     ├── jobs.py                 # Job / JobManager (thread-safe)
     ├── keystore.py             # Fernet-encrypted API key storage
+    ├── file_readers.py         # Multi-format instruction file reader
     ├── run.py                  # Uvicorn entry point (HTTPS, localhost:30319)
     ├── requirements.txt        # Python dependencies
     │
@@ -147,7 +167,7 @@ verba/
     │   ├── videotr_routes.py   # /videotr/*
     │   ├── audiotr_routes.py   # /audiotr/*
     │   ├── transtr_routes.py   # /transtr/*
-    │   └── settings_routes.py  # /settings, /settings/browse
+    │   └── settings_routes.py  # /settings
     │
     ├── static/
     │   └── style.css           # Dark-themed UI styles
@@ -160,11 +180,12 @@ verba/
         ├── transtr.html        # Transcript summarization form
         ├── settings.html       # Settings, file locations, API key management
         └── partials/
-            ├── browse.html     # Directory browser modal fragment
-            ├── error.html      # Error message fragment
-            ├── progress.html   # SSE progress container
-            ├── progress_bar.html # Progress bar update fragment
-            └── result.html     # Job result display fragment
+            ├── browse.html          # Directory browser modal with New Folder
+            ├── error.html           # Error message fragment
+            ├── progress.html        # SSE progress container (generic)
+            ├── videotr_progress.html # SSE progress with verbose log (video)
+            ├── progress_bar.html    # Progress bar update fragment
+            └── result.html          # Job result display fragment
 ```
 
 **Runtime directories** (gitignored, created automatically):
@@ -181,10 +202,10 @@ verba/
 
 ### Prerequisites
 
-- Python 3.9+
-- FFmpeg installed and available on `PATH` (required for audio extraction)
-- For transcription: a Whisper-compatible environment
-- For summarization: Ollama running locally, or API keys for OpenAI / Google
+- Python 3.10+
+- FFmpeg installed and available on `PATH` (required for audio/video extraction)
+- For transcription: a Whisper-compatible environment (CPU or CUDA GPU)
+- For summarization: Ollama running locally, or API keys for OpenAI / Google / Circuit
 
 ### Starting the Application
 
@@ -197,6 +218,8 @@ On first run this will:
 2. Install all dependencies from `web/requirements.txt`
 3. Auto-generate a self-signed TLS certificate in `web/certs/`
 4. Launch the server as a background process
+
+On subsequent starts, dependencies are automatically updated from `requirements.txt`.
 
 Once started the application is available at **https://localhost:30319**.
 
@@ -219,7 +242,7 @@ To use your own TLS certificate, place `cert.pem` and `key.pem` in `web/certs/` 
 
 ```bash
 cd verba
-python -m venv web/webui
+python3 -m venv web/webui
 source web/webui/bin/activate
 pip install -r web/requirements.txt
 python -m web.run
@@ -231,7 +254,18 @@ python -m web.run
 |------|---------|
 | Video Transcription | `.mov` `.mp4` `.mkv` `.mpeg` `.avi` `.webm` |
 | Audio Transcription | `.mp3` `.wav` `.flac` `.m4a` `.ogg` `.aac` `.wma` `.opus` `.aiff` `.alac` |
-| Summarization | `.txt` `.md` `.csv` `.rtf` `.tsv` |
+| Summarization (input) | `.txt` `.md` `.csv` `.rtf` `.tsv` |
+| Instructions file | `.txt` `.csv` `.xlsx` `.doc` `.docx` `.md` `.pdf` |
+
+### Output File Naming
+
+Output files match the input filename with a tool-specific suffix:
+
+| Tool | Output Suffix | Example |
+|------|---------------|---------|
+| Video Transcription | `_videotr.md` | `meeting.mov` → `meeting_videotr.md` |
+| Audio Transcription | `_audiotr.md` | `interview.mp3` → `interview_audiotr.md` |
+| Summarization | `_summary.md` | `transcript.txt` → `transcript_summary.md` |
 
 ### Transcription Settings
 
@@ -239,36 +273,22 @@ Configurable via the Settings page or per-job overrides on each tool page:
 
 | Setting | Options | Default |
 |---------|---------|---------|
-| Whisper Model | `tiny`, `base`, `small`, `medium`, `large` | `base` |
+| Whisper Model | `tiny`, `base`, `small`, `medium`, `large`, `large-v2`, `large-v3` | `base` |
 | Device | `auto`, `cpu`, `cuda`, `mps` | `auto` |
 | Language | ISO 639-1 code or `auto` | `auto` |
 | Markdown Style | `simple`, `timestamped`, `detailed`, `srt_style` | `timestamped` |
 | Include Metadata | on/off | on |
 
-### File Locations
-
-Input and output directories for each tool are configurable from the Settings page under the **File Locations** section. Each directory field includes a **Browse** button that opens a directory browser modal for GUI-based navigation (including hidden and mounted directories).
-
-| Setting | Default | Used By |
-|---------|---------|---------|
-| Video Input | `videotr/input/` | Video batch processing input directory |
-| Video Transcribe Output | `web/output/` | Video transcription output (single and batch) |
-| Audio Input | `audiotr/input/` | Audio batch processing input directory |
-| Audio Transcribe Output | `web/output/` | Audio transcription output (single and batch) |
-| Summary Input | `transtr/input/` | Summary batch processing input directory |
-| Summary Output | `web/output/` | Reserved for future summary file output |
-
-Custom directories are created automatically when saved. Paths reset to defaults on application restart.
-
-### API Keys
-
-API keys for cloud LLM providers are managed on the Settings page. Keys are encrypted at rest using Fernet symmetric encryption and injected into environment variables at startup.
-
-Supported vendors: **OpenAI**, **Google**, **Anthropic**, **Ollama**, **Circuit**, **Abacus ChatLLM**
-
 ### Batch Processing
 
-Each tool supports batch mode. Place files in the corresponding input directory (configurable under Settings > File Locations) and enable the "Batch Process" toggle on the tool page. Default input directories:
+Each tool supports batch mode:
+
+1. Enable the **Batch Process** toggle on the tool page
+2. Use the **Browse** button to select an input directory (or type a path directly)
+3. Use the **New Folder** button in the browse dialog to create subdirectories as needed
+4. All supported files in the selected directory are processed sequentially with per-file progress tracking
+
+Default input directories:
 
 - `videotr/input/` for video files
 - `audiotr/input/` for audio files
@@ -278,8 +298,61 @@ Each tool supports batch mode. Place files in the corresponding input directory 
 
 The Summarize tool supports local and cloud LLM models, grouped by provider:
 
-| Provider | Models |
-|----------|--------|
-| **Ollama (Local)** | `llama:latest`, `mistral:7b`, `mixtral:8x7b`, `mixtral:8x22b`, `qwen2.5:latest`, `gemma2:latest`, `gemma3:latest` |
-| **OpenAI** | `gpt-4o`, `gpt-4o-mini` (requires API key) |
-| **Google** | `gemini-1.5-flash`, `gemini-1.5-pro` (requires API key) |
+| Provider | Models | Requires |
+|----------|--------|----------|
+| **Ollama (Local)** | `llama3:latest`, `llama3.2:latest`, `mistral:latest`, `mistral:7b`, `mixtral:8x7b`, `mixtral:8x22b`, `qwen2.5:latest`, `gemma2:latest`, `gemma3:latest` | Ollama running locally |
+| **OpenAI** | `gpt-4o`, `gpt-4o-mini` | `OPENAI_API_KEY` |
+| **Google** | `gemini-1.5-flash`, `gemini-1.5-pro` | `GOOGLE_API_KEY` |
+| **Circuit (Cisco)** | `circuit-internal`, `circuit-anthropic`, `circuit-openai`, `circuit-google` | `CIRCUIT_API_KEY` |
+
+### Summarization Instructions
+
+Instructions can be provided in two ways:
+
+1. **Text input**: Type or paste instructions directly into the Instructions textarea
+2. **File upload**: Upload an instructions file in any supported format (`.txt`, `.csv`, `.xlsx`, `.doc`, `.docx`, `.md`, `.pdf`). The uploaded file overrides the textarea content.
+
+### API Keys
+
+API keys for cloud LLM providers are managed on the Settings page. Keys are encrypted at rest using Fernet symmetric encryption and injected into environment variables at startup.
+
+| Vendor | Environment Variable |
+|--------|---------------------|
+| OpenAI | `OPENAI_API_KEY` |
+| Google | `GOOGLE_API_KEY` |
+| Circuit | `CIRCUIT_API_KEY` |
+| Anthropic | `ANTHROPIC_API_KEY` |
+
+### File Locations
+
+Input and output directories for each tool are configurable from the Settings page under the **File Locations** section. Each directory field includes a **Browse** button that opens a directory browser modal for GUI-based navigation, with a **New Folder** button for creating subdirectories.
+
+Custom directories are created automatically when saved. Paths reset to defaults on application restart.
+
+## Dependencies
+
+### Python Packages (web/requirements.txt)
+
+| Package | Purpose |
+|---------|---------|
+| `fastapi` | Web framework |
+| `uvicorn[standard]` | ASGI server with HTTPS support |
+| `jinja2` | Template engine |
+| `python-multipart` | File upload handling |
+| `sse-starlette` | Server-Sent Events |
+| `cryptography` | TLS cert generation and Fernet encryption |
+| `openai-whisper` | Speech-to-text transcription |
+| `openpyxl` | Excel file reading (instructions) |
+| `python-docx` | Word document reading (instructions) |
+| `PyPDF2` | PDF file reading (instructions) |
+| `requests` | HTTP client (Ollama/Circuit API) |
+| `openai` | OpenAI API client |
+| `google-generativeai` | Google Gemini API client |
+
+### System Dependencies
+
+| Dependency | Purpose | Installation |
+|------------|---------|-------------|
+| **FFmpeg** | Audio extraction from video/audio files | `brew install ffmpeg` (macOS) / `apt install ffmpeg` (Ubuntu) |
+| **Python 3.10+** | Runtime | System package manager |
+| **Ollama** (optional) | Local LLM inference | [ollama.com/download](https://ollama.com/download) |
