@@ -30,7 +30,10 @@ def is_model_installed(model: str) -> bool:
 
 
 def pull_model(model: str, job) -> bool:
-    """Pull an Ollama model, updating job progress. Returns True on success."""
+    """Pull an Ollama model, updating job progress. Returns True on success.
+
+    Stores the subprocess on job._process so it can be terminated externally.
+    """
     try:
         process = subprocess.Popen(
             ["ollama", "pull", model],
@@ -38,6 +41,7 @@ def pull_model(model: str, job) -> bool:
             stderr=subprocess.STDOUT,
             text=True,
         )
+        job._process = process
         for line in process.stdout:
             line = line.strip()
             if line:

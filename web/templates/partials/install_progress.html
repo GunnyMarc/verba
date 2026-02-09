@@ -17,6 +17,13 @@
         <div class="progress-message">Starting download...</div>
     </div>
 
+    <div class="install-actions" style="margin-top: var(--space-md);">
+        <button type="button" class="btn btn--cancel"
+                hx-post="/transtr/install/{{ job_id }}/cancel"
+                hx-target="closest .progress-container"
+                hx-swap="outerHTML">Cancel</button>
+    </div>
+
     <div hx-trigger="sse:complete"
          hx-get="/transtr/install/{{ job_id }}/result"
          hx-target="closest .progress-container"

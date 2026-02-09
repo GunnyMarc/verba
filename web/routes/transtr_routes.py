@@ -271,6 +271,38 @@ async def install_model(request: Request, model: str = Form("")):
     })
 
 
+@router.post("/install/{job_id}/cancel")
+async def cancel_install(request: Request, job_id: str):
+    templates = request.app.state.templates
+    job_manager = request.app.state.job_manager
+    job = job_manager.get_job(job_id)
+
+    if not job:
+        return templates.TemplateResponse("partials/error.html", {
+            "request": request,
+            "error": "Install job not found.",
+        })
+
+    # Kill the subprocess if it's still running
+    process = getattr(job, "_process", None)
+    if process and process.poll() is None:
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except Exception:
+            process.kill()
+
+    job.fail("Installation cancelled by user.")
+
+    model = job.settings.get("model", "")
+    return templates.TemplateResponse("partials/install_result.html", {
+        "request": request,
+        "success": False,
+        "cancelled": True,
+        "model": model,
+    })
+
+
 @router.get("/install/{job_id}/result")
 async def install_result(request: Request, job_id: str):
     templates = request.app.state.templates

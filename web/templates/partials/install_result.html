@@ -26,6 +26,34 @@
         }
     }, 2000);
 </script>
+{% elif cancelled %}
+<div class="card install-card">
+    <div class="install-header">
+        <span class="install-icon">&#x1F6D1;</span>
+        <span class="install-title">Installation Cancelled</span>
+    </div>
+    <p class="install-text">
+        Installation of <strong>{{ model }}</strong> was cancelled. Server restarting...
+    </p>
+    <div class="progress-message" id="restart-status">Restarting server...</div>
+</div>
+<script>
+    fetch('/transtr/restart', {method: 'POST'}).catch(function(){});
+    var attempts = 0;
+    var poller = setInterval(function() {
+        attempts++;
+        fetch('/transtr', {method: 'HEAD'}).then(function(r) {
+            if (r.ok) {
+                clearInterval(poller);
+                window.location.href = '/transtr';
+            }
+        }).catch(function(){});
+        if (attempts > 30) {
+            clearInterval(poller);
+            document.getElementById('restart-status').textContent = 'Restart taking longer than expected. Please refresh manually.';
+        }
+    }, 2000);
+</script>
 {% else %}
 <div class="card error-card">
     <div class="error-header">
