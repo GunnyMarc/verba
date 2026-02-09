@@ -70,16 +70,18 @@ cmd_start() {
         log_info "Creating virtual environment in web/webui ..."
         cd "$WEB_DIR"
         python3 -m venv webui
-        source webui/bin/activate
-        pip install -r requirements.txt
         cd "$SCRIPT_DIR"
-        log_info "Dependencies installed."
     fi
 
     if [[ ! -x "$PYTHON" ]]; then
         log_error "Python not found at ${PYTHON}"
         exit 1
     fi
+
+    # --- Install / update dependencies ---
+    log_info "Installing dependencies ..."
+    "$PIP" install --quiet -r "${WEB_DIR}/requirements.txt"
+    log_info "Dependencies up to date."
 
     # --- Log directory ---
     mkdir -p "$LOG_DIR"

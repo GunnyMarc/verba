@@ -8,3 +8,6 @@ openai-whisper
 openpyxl
 python-docx
 PyPDF2
+requests
+openai
+google-generativeai

@@ -32,7 +32,7 @@ class TranstrAdapter:
             from transtr.summarizer import summarize
 
             summary = summarize(
-                text=text,
+                transcript_text=text,
                 instructions=instructions,
                 model=model,
                 base_url=base_url,
@@ -82,7 +82,7 @@ class TranstrAdapter:
                 from transtr.summarizer import summarize
 
                 summary = summarize(
-                    text=item["text"],
+                    transcript_text=item["text"],
                     instructions=instructions,
                     model=model,
                     base_url=base_url,

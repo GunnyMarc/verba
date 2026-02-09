@@ -8,7 +8,9 @@ CONF_FILE_NAME = "transtr.conf"
 
 AVAILABLE_MODELS = {
     "Ollama (Local)": [
-        "llama:latest",
+        "llama3:latest",
+        "llama3.2:latest",
+        "mistral:latest",
         "mistral:7b",
         "mixtral:8x7b",
         "mixtral:8x22b",
@@ -28,7 +30,9 @@ AVAILABLE_MODELS = {
 
 # Display labels for the model selection menu
 MODEL_DISPLAY_LABELS = {
-    "llama:latest": "llama:latest",
+    "llama3:latest": "Llama 3 (Local)",
+    "llama3.2:latest": "Llama 3.2 (Local)",
+    "mistral:latest": "Mistral (Local)",
     "mistral:7b": "Mistral 7B",
     "mixtral:8x7b": "Mixtral 8x7B",
     "mixtral:8x22b": "Mixtral 8x22B",

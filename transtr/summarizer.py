@@ -26,17 +26,19 @@ def summarize(transcript_text: str, instructions: str, model: str, base_url: str
 
 def _summarize_ollama(transcript_text: str, instructions: str, model: str, base_url: str) -> str:
     response = requests.post(
-        f"{base_url}/api/generate",
+        f"{base_url}/api/chat",
         json={
             "model": model,
-            "system": instructions,
-            "prompt": transcript_text,
+            "messages": [
+                {"role": "system", "content": instructions},
+                {"role": "user", "content": transcript_text},
+            ],
             "stream": False,
         },
         timeout=600,
     )
     response.raise_for_status()
-    return response.json()["response"]
+    return response.json()["message"]["content"]
 
 
 def _summarize_openai(transcript_text: str, instructions: str, model: str) -> str:
