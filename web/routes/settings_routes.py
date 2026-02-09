@@ -34,8 +34,6 @@ async def settings_update(
     markdown_style: str = Form(""),
     include_metadata: str = Form(""),
     ollama_base_url: str = Form(""),
-    api_vendor: str = Form(""),
-    api_key: str = Form(""),
 ):
     settings = request.app.state.settings
     keystore = request.app.state.keystore
@@ -54,11 +52,6 @@ async def settings_update(
     if ollama_base_url:
         settings.ollama_base_url = ollama_base_url
 
-    # Save API key if provided
-    if api_vendor and api_key:
-        keystore.save_key(api_vendor, api_key)
-        keystore.apply_to_env()
-
     return templates.TemplateResponse("settings.html", {
         "request": request,
         "active_page": "settings",
@@ -69,6 +62,22 @@ async def settings_update(
         "vendor_names": VENDOR_DISPLAY_NAMES,
         "stored_keys": keystore.masked_keys(),
         "saved": True,
+    })
+
+
+@router.post("/keys/add")
+async def add_key(request: Request, api_vendor: str = Form(""), api_key: str = Form("")):
+    keystore = request.app.state.keystore
+    templates = request.app.state.templates
+
+    if api_vendor and api_key:
+        keystore.save_key(api_vendor, api_key)
+        keystore.apply_to_env()
+
+    return templates.TemplateResponse("partials/stored_keys.html", {
+        "request": request,
+        "stored_keys": keystore.masked_keys(),
+        "vendor_names": VENDOR_DISPLAY_NAMES,
     })
 
 
