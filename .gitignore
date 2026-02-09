@@ -1,5 +1,9 @@
 verba_build_prompt.md
 venv/
+verba/
+.venv/
+env/
+.env/
 web/webui/
 __pycache__/
 .DS_Store
@@ -10,3 +14,27 @@ web/certs/
 web/uploads/
 web/output/
 web/log/
+
+# Video files
+*.mov
+*.mp4
+*.mkv
+*.mpeg
+*.avi
+*.webm
+
+# Audio files
+*.mp3
+*.wav
+*.flac
+*.m4a
+*.ogg
+*.aac
+*.wma
+*.opus
+*.aiff
+*.alac
+
+# Markdown files
+*.md
+!README.md
