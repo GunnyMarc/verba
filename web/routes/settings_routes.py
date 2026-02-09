@@ -21,7 +21,7 @@ async def settings_page(request: Request):
         "device_choices": DEVICE_CHOICES,
         "markdown_styles": MARKDOWN_STYLES,
         "vendor_names": VENDOR_DISPLAY_NAMES,
-        "stored_vendors": keystore.stored_vendors(),
+        "stored_keys": keystore.masked_keys(),
     })
 
 
@@ -67,6 +67,6 @@ async def settings_update(
         "device_choices": DEVICE_CHOICES,
         "markdown_styles": MARKDOWN_STYLES,
         "vendor_names": VENDOR_DISPLAY_NAMES,
-        "stored_vendors": keystore.stored_vendors(),
+        "stored_keys": keystore.masked_keys(),
         "saved": True,
     })

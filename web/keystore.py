@@ -55,6 +55,26 @@ class KeyStore:
     def stored_vendors(self) -> list[str]:
         return list(self._load_store().keys())
 
+    def masked_keys(self) -> dict[str, str]:
+        """Return {vendor: masked_key} for all stored keys."""
+        data = self._load_store()
+        masked = {}
+        for vendor, key in data.items():
+            if len(key) > 8:
+                masked[vendor] = key[:4] + "*" * (len(key) - 8) + key[-4:]
+            elif len(key) > 4:
+                masked[vendor] = key[:2] + "*" * (len(key) - 2)
+            else:
+                masked[vendor] = "*" * len(key)
+        return masked
+
+    def delete_all(self):
+        """Remove all stored keys and the key file."""
+        if DATA_FILE.exists():
+            DATA_FILE.unlink()
+        if KEY_FILE.exists():
+            KEY_FILE.unlink()
+
     def apply_to_env(self):
         data = self._load_store()
         for vendor, api_key in data.items():

@@ -1083,6 +1083,49 @@ a:hover { color: var(--text-primary); }
     margin-bottom: var(--space-lg);
 }
 
+.stored-keys-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+}
+
+.stored-keys-list .form-label {
+    margin-bottom: var(--space-xs);
+}
+
+.stored-key-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+}
+
+.stored-key-value {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+}
+
+.stored-keys-empty {
+    margin-bottom: var(--space-lg);
+    padding: var(--space-md);
+    background: var(--color-bg);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-sm);
+    text-align: center;
+}
+
+.stored-keys-empty-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
 /* ---- Scrollbar ---- */
 ::-webkit-scrollbar {
     width: 6px;

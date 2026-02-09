@@ -220,12 +220,26 @@ cmd_clear_cache() {
         fi
     done
 
-    # --- Remove encrypted API key files ---
+    # --- Remove encrypted API key files (with confirmation) ---
     local key_file="${WEB_DIR}/.verba.key"
     local keys_dat="${WEB_DIR}/.verba_keys.dat"
     if [[ -f "$key_file" ]] || [[ -f "$keys_dat" ]]; then
-        rm -f "$key_file" "$keys_dat"
-        log_info "Removed encrypted API key files."
+        echo ""
+        log_info "All API Keys will be cleared."
+        printf "[verba]  Proceed? (Y/N): "
+        read -r answer
+        case "$answer" in
+            [Yy])
+                rm -f "$key_file" "$keys_dat"
+                log_info "Removed encrypted API key files."
+                ;;
+            [Nn])
+                log_info "API keys left in place."
+                ;;
+            *)
+                log_info "Invalid selection. API keys left in place."
+                ;;
+        esac
     else
         log_info "No API key files found."
     fi
