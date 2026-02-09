@@ -991,11 +991,23 @@ a:hover { color: var(--text-primary); }
     color: var(--text-muted);
 }
 
+.browse-new-folder {
+    padding: var(--space-sm) var(--space-lg);
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+}
+
+.browse-new-folder .form-input {
+    flex: 1;
+}
+
 .browse-actions {
     padding: var(--space-md) var(--space-lg);
     border-top: 1px solid var(--color-border);
     display: flex;
     justify-content: flex-end;
+    gap: var(--space-sm);
 }
 
 /* ---- Input with Browse ---- */

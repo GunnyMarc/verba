@@ -27,7 +27,20 @@
     {% endif %}
 </div>
 
+<div id="new-folder-row" class="browse-new-folder" style="display:none">
+    <input type="text" id="new-folder-name" class="form-input" placeholder="Folder name">
+    <button type="button" class="btn btn--primary"
+            hx-post="{{ browse_url }}/mkdir"
+            hx-vals='js:{"path": "{{ current_path }}", "name": document.getElementById("new-folder-name").value, "target": "{{ target }}"}'
+            hx-target="#browse-modal-content"
+            hx-swap="innerHTML">Create</button>
+    <button type="button" class="btn btn--secondary"
+            onclick="document.getElementById('new-folder-row').style.display='none'">Cancel</button>
+</div>
+
 <div class="browse-actions">
+    <button type="button" class="btn btn--secondary"
+            onclick="var row=document.getElementById('new-folder-row'); row.style.display=row.style.display==='none'?'flex':'none'; if(row.style.display==='flex') document.getElementById('new-folder-name').focus();">New Folder</button>
     <button type="button" class="btn btn--primary"
             onclick="document.getElementById(this.dataset.target).value='{{ current_path }}'; document.getElementById('browse-modal').style.display='none'"
             data-target="{{ target }}">Select This Directory</button>
