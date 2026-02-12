@@ -184,6 +184,7 @@ Place your own `cert.pem` and `key.pem` in `certs/` to use a custom certificate.
 | `PyPDF2` | latest | PDF file reading |
 | `requests` | latest | HTTP client for Ollama/Circuit |
 | `openai` | latest | OpenAI API client |
+| `anthropic` | latest | Anthropic API client |
 | `google-generativeai` | latest | Google Gemini API client |
 
 ## Running

@@ -1,16 +1,17 @@
 # transtr — Transcript Summarization
 
-Summarizes transcript text using LLMs. Supports local inference via Ollama and cloud providers (OpenAI, Google Gemini, Circuit/Cisco).
+Summarizes transcript text using LLMs. Supports local inference via Ollama and cloud providers (OpenAI, Google Gemini, Anthropic Claude, Circuit/Cisco).
 
 ## Architecture
 
 ```
 summarize(transcript_text, instructions, model, base_url)
 │
-├─ is_circuit_model(model)?  → _summarize_circuit()   [Circuit API]
-├─ is_openai_model(model)?   → _summarize_openai()    [OpenAI SDK]
-├─ is_google_model(model)?   → _summarize_google()    [Google SDK]
-└─ default                   → _summarize_ollama()    [Ollama /api/chat]
+├─ is_circuit_model(model)?    → _summarize_circuit()   [Circuit API]
+├─ is_anthropic_model(model)?  → _summarize_anthropic() [Anthropic SDK]
+├─ is_openai_model(model)?     → _summarize_openai()    [OpenAI SDK]
+├─ is_google_model(model)?     → _summarize_google()    [Google SDK]
+└─ default                     → _summarize_ollama()    [Ollama /api/chat]
 ```
 
 All backends use the same message structure:
@@ -56,6 +57,14 @@ All backends use the same message structure:
 | `gemini-1.5-flash` | Google Gemini 1.5 Flash | `GOOGLE_API_KEY` |
 | `gemini-1.5-pro` | Google Gemini 1.5 Pro | `GOOGLE_API_KEY` |
 
+### Anthropic (Commercial)
+
+| Model | Display Name | Requires |
+|-------|-------------|----------|
+| `claude-opus-4-6` | Anthropic Claude Opus 4 (6) | `ANTHROPIC_API_KEY` |
+| `claude-sonnet-4-5-20250929` | Anthropic Claude Sonnet 4.5 | `ANTHROPIC_API_KEY` |
+| `claude-haiku-4-5-20251001` | Anthropic Claude Haiku 4.5 | `ANTHROPIC_API_KEY` |
+
 ### Circuit (Cisco-only)
 
 | Model | Display Name | Requires |
@@ -86,6 +95,13 @@ All backends use the same message structure:
 - **System instruction**: Passed via `GenerativeModel(system_instruction=...)`
 - **Response**: `response.text`
 
+### Anthropic Claude
+
+- **Client**: `anthropic.Anthropic()` (reads `ANTHROPIC_API_KEY` from env)
+- **System message**: Passed via `system=...` parameter
+- **Max tokens**: 4096
+- **Response**: `response.content[0].text`
+
 ### Circuit (Cisco)
 
 - **Endpoint**: `POST {CIRCUIT_BASE_URL}/chat/completions` (default: `https://circuit.cisco.com/v1`)
@@ -100,6 +116,7 @@ All backends use the same message structure:
 |----------|-------------|---------|
 | `OPENAI_API_KEY` | OpenAI models | — |
 | `GOOGLE_API_KEY` | Google models | — |
+| `ANTHROPIC_API_KEY` | Anthropic models | — |
 | `CIRCUIT_API_KEY` | Circuit models | — |
 | `CIRCUIT_BASE_URL` | Circuit endpoint | `https://circuit.cisco.com/v1` |
 
@@ -141,6 +158,7 @@ instructions_file = instructions_main.md
 |----------|-------------------|
 | `is_openai_model(model)` | `gpt-4o`, `gpt-4o-mini` |
 | `is_google_model(model)` | `gemini-1.5-flash`, `gemini-1.5-pro` |
+| `is_anthropic_model(model)` | `claude-opus-4-6`, `claude-sonnet-4-5-20250929`, `claude-haiku-4-5-20251001` |
 | `is_circuit_model(model)` | `circuit-internal`, `circuit-anthropic`, `circuit-openai`, `circuit-google` |
 | `is_cloud_model(model)` | All of the above |
 
@@ -164,5 +182,6 @@ instructions_file = instructions_main.md
 - Python 3.10+
 - `requests` (Ollama and Circuit HTTP calls)
 - `openai` (OpenAI SDK)
+- `anthropic` (Anthropic SDK)
 - `google-generativeai` (Google Gemini SDK)
 - Ollama (optional, for local models) — [ollama.com/download](https://ollama.com/download)

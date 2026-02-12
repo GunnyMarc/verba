@@ -319,6 +319,7 @@ The Summarize tool supports local and cloud LLM models, grouped by provider:
 | **Ollama (Local)** | `llama3:latest`, `llama3.2:latest`, `mistral:latest`, `mistral:7b`, `mixtral:8x7b`, `mixtral:8x22b`, `qwen2.5:latest`, `gemma2:latest`, `gemma3:latest` | Ollama running locally |
 | **OpenAI** | `gpt-4o`, `gpt-4o-mini` | `OPENAI_API_KEY` |
 | **Google** | `gemini-1.5-flash`, `gemini-1.5-pro` | `GOOGLE_API_KEY` |
+| **Anthropic** | `claude-opus-4-6`, `claude-sonnet-4-5-20250929`, `claude-haiku-4-5-20251001` | `ANTHROPIC_API_KEY` |
 | **Circuit (Cisco)** | `circuit-internal`, `circuit-anthropic`, `circuit-openai`, `circuit-google` | `CIRCUIT_API_KEY` |
 
 ### Summarization Instructions
@@ -333,11 +334,11 @@ Instructions can be provided in two ways:
 API keys for cloud LLM providers are managed on the Settings page. Keys are encrypted at rest using Fernet symmetric encryption and injected into environment variables at startup.
 
 | Vendor | Environment Variable |
-|--------|---------------------|
+|--------|----------------------|
 | OpenAI | `OPENAI_API_KEY` |
 | Google | `GOOGLE_API_KEY` |
-| Circuit | `CIRCUIT_API_KEY` |
 | Anthropic | `ANTHROPIC_API_KEY` |
+| Circuit | `CIRCUIT_API_KEY` |
 
 ### File Locations
 
@@ -363,6 +364,7 @@ Custom directories are created automatically when saved. Paths reset to defaults
 | `PyPDF2` | PDF file reading (instructions) |
 | `requests` | HTTP client (Ollama/Circuit API) |
 | `openai` | OpenAI API client |
+| `anthropic` | Anthropic API client |
 | `google-generativeai` | Google Gemini API client |
 
 ### System Dependencies
