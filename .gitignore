@@ -38,3 +38,17 @@ web/log/
 # Markdown files
 *.md
 !README.md
+
+# iOS / Xcode
+ios/**/xcuserdata/
+ios/**/*.xcworkspace
+ios/**/DerivedData/
+ios/**/Build/
+ios/**/*.pbxuser
+ios/**/*.mode1v3
+ios/**/*.mode2v3
+ios/**/*.perspectivev3
+ios/**/*.hmap
+ios/**/*.ipa
+ios/**/*.dSYM.zip
+ios/**/*.dSYM

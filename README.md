@@ -1,8 +1,13 @@
 # Verba
 
-A web-based media processing suite for transcribing video/audio files and summarizing transcripts using Whisper and LLMs.
+A media processing suite for transcribing video/audio files and summarizing transcripts using Whisper and LLMs.
 
-Built with **FastAPI**, **HTMX**, and **Jinja2**. Jobs run in background threads with real-time SSE progress streaming to the browser. All traffic is served over **HTTPS on port 30319**.
+## Components
+
+- **Web Application**: FastAPI, HTMX, and Jinja2 web interface served over HTTPS on port 30319
+- **iOS Application (Verba-M)**: Native SwiftUI mobile app for iPhone and iPad
+
+The web app runs background jobs with real-time SSE progress streaming to the browser.
 
 ## Application Architecture
 
@@ -107,6 +112,17 @@ verba/
 ├── README.md
 ├── .gitignore
 ├── verba.sh                    # Startup script (start/stop/status/log/clear-cache)
+│
+├── ios/                        # iOS mobile application
+│   ├── README.md
+│   └── Verba-M/                # SwiftUI iOS app (Xcode project)
+│       ├── Verba-M.xcodeproj
+│       └── Verba-M/
+│           ├── Verba_MApp.swift
+│           ├── ContentView.swift
+│           ├── Models/         # Data models and theme colors
+│           ├── Views/          # SwiftUI views
+│           └── Assets.xcassets/
 │
 ├── videotr/                    # Video transcription pipeline
 │   ├── README.md
